@@ -97,10 +97,15 @@ router.post('/register', async (req: any, res: Response): Promise<any> => {
     };
     const token = signJWT(payload);
 
+    const isSecure = process.env.NODE_ENV === 'production' || 
+                     req.secure || 
+                     req.headers['x-forwarded-proto'] === 'https' ||
+                     (req.headers['host'] && req.headers['host'].includes('ngrok'));
+
     res.cookie('auth_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: !!isSecure,
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7 * 1000, // 7 days in ms
       path: '/',
     });
@@ -153,10 +158,15 @@ router.post('/login', async (req: any, res: Response): Promise<any> => {
 
     const token = signJWT(payload);
 
+    const isSecure = process.env.NODE_ENV === 'production' || 
+                     req.secure || 
+                     req.headers['x-forwarded-proto'] === 'https' ||
+                     (req.headers['host'] && req.headers['host'].includes('ngrok'));
+
     res.cookie('auth_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: !!isSecure,
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7 * 1000, // 7 days in ms
       path: '/',
     });
