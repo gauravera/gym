@@ -89,7 +89,7 @@ export default async function DashboardPage(props: DashboardPageProps) {
         />
         <MetricCard
           title="Total Revenue"
-          value={`₹${totalRevenue._sum.amount || 0}`}
+          value={`₹${totalRevenue || 0}`}
           change={`+${monthlyPaidTxns} plan orders`}
           changeType="positive"
           icon={<CreditCard className="h-5 w-5" />}
