@@ -1,0 +1,22 @@
+# dependencies
+node_modules/
+
+# typescript compiled outputs
+dist/
+
+# env files
+.env
+.env.local
+.env.development
+.env.production
+.env*.local
+
+# debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# system files
+.DS_Store
+*.pem
