@@ -780,54 +780,6 @@ export default function WhatsAppSetupPage() {
               </div>
             )}
 
-            {/* Configured Templates */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 backdrop-blur-md space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-cyan-400" />
-                  Synced Message Templates
-                </h3>
-                <button
-                  onClick={handleSyncTemplates}
-                  disabled={syncingTemplates}
-                  className="rounded-xl border border-zinc-850 hover:bg-zinc-900 px-3.5 py-1.5 text-xs font-bold text-zinc-300 transition-all disabled:opacity-50 flex items-center gap-1"
-                >
-                  <RefreshCcw className={`w-3 h-3 ${syncingTemplates ? "animate-spin" : ""}`} />
-                  Sync Templates
-                </button>
-              </div>
-
-              {config.templates && config.templates.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {config.templates.map((t) => (
-                    <div
-                      key={t.id}
-                      className="border border-zinc-900 bg-zinc-950 p-4 rounded-xl flex items-center justify-between text-xs"
-                    >
-                      <div className="space-y-1">
-                        <span className="font-bold text-white block">{t.templateName}</span>
-                        <span className="text-zinc-500 text-[10px] font-semibold uppercase">
-                          {t.category} • {t.language}
-                        </span>
-                      </div>
-                      <div>
-                        {t.status === "APPROVED" ? (
-                          <span className="rounded bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-extrabold text-emerald-400">
-                            APPROVED
-                          </span>
-                        ) : (
-                          <span className="rounded bg-zinc-800 border border-zinc-700 px-2 py-0.5 text-[9px] font-extrabold text-zinc-400">
-                            {t.status}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-zinc-600 italic py-4">No synced message templates. Connect to sync templates from Meta.</p>
-              )}
-            </div>
 
             {/* Message Activity Log */}
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 backdrop-blur-md space-y-4">

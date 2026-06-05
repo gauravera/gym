@@ -9,6 +9,7 @@ import authRouter from "./routes/auth.js";
 import usersRouter from "./routes/users.js";
 import whatsappRouter from "./routes/whatsapp.route.js";
 import whatsappWebhookRouter from "./routes/whatsappWebhook.route.js";
+import whatsappTemplatesRouter from "./routes/whatsappTemplates.route.js";
 import { authenticateToken, scopeToGym } from "./middleware/auth.js";
 
 
@@ -49,6 +50,7 @@ app.get("/health", (req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
+app.use("/api/dashboard/:gymSlug/whatsapp/templates", authenticateToken, scopeToGym, whatsappTemplatesRouter);
 app.use("/api/dashboard/:gymSlug/whatsapp", authenticateToken, scopeToGym, whatsappRouter);
 app.use("/webhook", whatsappWebhookRouter);
 

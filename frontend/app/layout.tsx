@@ -36,7 +36,7 @@ export default function RootLayout({
               (function() {
                 try {
                   var saved = localStorage.getItem('fitflow-theme');
-                  if (saved === 'dark' || saved === 'grey' || saved === 'light') {
+                  if (saved === 'dark' || saved === 'coloured' || saved === 'light') {
                     document.documentElement.setAttribute('data-theme', saved);
                   } else {
                     document.documentElement.setAttribute('data-theme', 'dark');

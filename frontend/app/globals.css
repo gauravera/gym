@@ -42,24 +42,24 @@ body {
   --foreground: #f4f4f5;
 }
 
-/* Grey Theme (Warm dark grey zinc-900 background) */
-[data-theme="grey"] {
-  --color-zinc-950: #18181b;
-  --color-zinc-900: #27272a;
-  --color-zinc-850: #3f3f46;
-  --color-zinc-800: #52525b;
-  --color-zinc-700: #71717a;
-  --color-zinc-600: #a1a1aa;
-  --color-zinc-500: #d4d4d8;
-  --color-zinc-400: #e4e4e7;
-  --color-zinc-300: #f4f4f5;
-  --color-zinc-200: #fafafa;
-  --color-zinc-100: #ffffff;
-  --color-white: #ffffff;
-  --color-black: #000000;
+/* Coloured Theme (Light ice-blue background with royal/sky blue highlights) */
+[data-theme="coloured"] {
+  --color-zinc-950: #C4E2F5;  /* Main background */
+  --color-zinc-900: #b3d7f0;  /* Layout panel background */
+  --color-zinc-850: #a3cbe9;  /* Card backgrounds / Inputs */
+  --color-zinc-800: #8cbee2;  /* Borders */
+  --color-zinc-700: #2C5EAD;  /* Royal Blue Accent */
+  --color-zinc-600: #1591DC;  /* Mid Blue Accent */
+  --color-zinc-500: #4BB8FA;  /* Sky Blue Accent */
+  --color-zinc-400: #334e68;  /* Muted dark text */
+  --color-zinc-300: #243b53;  /* Medium dark text */
+  --color-zinc-200: #102a43;  /* Normal body text */
+  --color-zinc-100: #0b1a30;  /* Heading text */
+  --color-white: #0b1a30;     /* Map text-white to very dark blue */
+  --color-black: #C4E2F5;     /* Map bg-black to ice-blue */
 
-  --background: #18181b;
-  --foreground: #f4f4f5;
+  --background: #C4E2F5;
+  --foreground: #0b1a30;
 }
 
 /* Light Theme (Fully inverted light layout) */

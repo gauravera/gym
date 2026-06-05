@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Sun, Moon, Palette } from "lucide-react";
 
-type Theme = "dark" | "grey" | "light";
+type Theme = "dark" | "coloured" | "light";
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("dark");
@@ -12,7 +12,7 @@ export default function ThemeToggle() {
   // Load theme from localStorage on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem("fitflow-theme") as Theme;
-    if (savedTheme === "dark" || savedTheme === "grey" || savedTheme === "light") {
+    if (savedTheme === "dark" || savedTheme === "coloured" || savedTheme === "light") {
       setTheme(savedTheme);
       document.documentElement.setAttribute("data-theme", savedTheme);
     } else {
@@ -50,13 +50,13 @@ export default function ThemeToggle() {
         <Moon className="w-3.5 h-3.5" />
       </button>
 
-      {/* Grey Button */}
+      {/* Coloured Button */}
       <button
-        onClick={() => changeTheme("grey")}
-        title="Grey Theme"
+        onClick={() => changeTheme("coloured")}
+        title="Coloured Theme"
         className={`p-1.5 rounded-lg transition-all ${
-          theme === "grey"
-            ? "bg-zinc-800 text-cyan-400 shadow-sm"
+          theme === "coloured"
+            ? "bg-zinc-800 text-sky-400 shadow-sm"
             : "text-zinc-500 hover:text-zinc-300"
         }`}
       >

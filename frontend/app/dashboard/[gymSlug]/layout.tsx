@@ -14,6 +14,7 @@ import {
   Settings,
   LogOut,
   UserCheck,
+  FileText,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -47,6 +48,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
     { label: 'Payments Portal', icon: <CheckSquare className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/payments` },
     { label: 'Chatbot Configs', icon: <Bot className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/chatbot` },
     { label: 'Live Human Chat', icon: <MessageCircle className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/live-chat` },
+    { label: 'Message Templates', icon: <FileText className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/templates` },
     { label: 'Integrations Setup', icon: <Settings className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/settings` },
   ];
 
