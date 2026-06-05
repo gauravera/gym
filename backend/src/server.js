@@ -7,6 +7,8 @@ import prisma from "./prisma.js";
 import { initSocket } from "./socket.js";
 import authRouter from "./routes/auth.js";
 import usersRouter from "./routes/users.js";
+import whatsappRouter from "./routes/whatsapp.route.js";
+import { authenticateToken, scopeToGym } from "./middleware/auth.js";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -44,6 +46,8 @@ app.get("/health", (req, res) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
+app.use("/api/dashboard/:gymSlug/whatsapp", authenticateToken, scopeToGym, whatsappRouter);
+
 
 /* ================= ERROR HANDLING ================= */
 app.use((err, req, res, next) => {

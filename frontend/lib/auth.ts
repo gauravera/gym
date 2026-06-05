@@ -1,3 +1,4 @@
+
 import { fetchBackend } from './api-client';
 
 export interface JWTPayload {
@@ -42,7 +43,7 @@ export async function getSessionForGym(gymSlug: string): Promise<JWTPayload | nu
     const res = await fetchBackend('/api/auth/me');
     if (!res.ok) return null;
     const data = await res.json();
-    
+
     const decodedGymSlug = decodeURIComponent(gymSlug).toLowerCase();
     if (!data.user || !data.user.gym || data.user.gym.slug.toLowerCase() !== decodedGymSlug) {
       return null;
