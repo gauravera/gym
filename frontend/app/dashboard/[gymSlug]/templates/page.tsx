@@ -508,7 +508,6 @@ export default function MessageTemplatesPage() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <div id="neon-input-mask"></div>
                 <div id="neon-pink-mask"></div>
                 <div className="neon-filterBorder"></div>
                 <div

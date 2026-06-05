@@ -282,7 +282,7 @@ aside, header, main, table, tr, td, th, div, button, input, textarea, select {
 .neon-darkBorderBg,
 .neon-glow {
   max-height: 70px;
-  max-width: 314px;
+  max-width: 550px;
   height: 100%;
   width: 100%;
   position: absolute;
@@ -295,7 +295,7 @@ aside, header, main, table, tr, td, th, div, button, input, textarea, select {
 .neon-input {
   background-color: #010201;
   border: none;
-  width: 301px;
+  width: 537px;
   height: 56px;
   border-radius: 10px;
   color: white;
@@ -308,7 +308,7 @@ aside, header, main, table, tr, td, th, div, button, input, textarea, select {
   align-items: center;
   justify-content: center;
   position: relative;
-  width: 314px;
+  width: 550px;
   height: 70px;
 }
 
@@ -318,20 +318,6 @@ aside, header, main, table, tr, td, th, div, button, input, textarea, select {
 
 .neon-input:focus {
   outline: none;
-}
-
-#neon-main:focus-within > #neon-input-mask {
-  display: none;
-}
-
-#neon-input-mask {
-  pointer-events: none;
-  width: 100px;
-  height: 20px;
-  position: absolute;
-  background: linear-gradient(90deg, transparent, black);
-  top: 18px;
-  left: 70px;
 }
 
 #neon-pink-mask {
@@ -353,7 +339,7 @@ aside, header, main, table, tr, td, th, div, button, input, textarea, select {
 
 .neon-white {
   max-height: 63px;
-  max-width: 307px;
+  max-width: 543px;
   border-radius: 10px;
   filter: blur(2px);
 }
@@ -384,7 +370,7 @@ aside, header, main, table, tr, td, th, div, button, input, textarea, select {
 
 .neon-border {
   max-height: 59px;
-  max-width: 303px;
+  max-width: 539px;
   border-radius: 11px;
   filter: blur(0.5px);
 }
@@ -415,7 +401,7 @@ aside, header, main, table, tr, td, th, div, button, input, textarea, select {
 
 .neon-darkBorderBg {
   max-height: 65px;
-  max-width: 312px;
+  max-width: 548px;
 }
 
 .neon-darkBorderBg::before {
@@ -489,7 +475,7 @@ aside, header, main, table, tr, td, th, div, button, input, textarea, select {
   filter: blur(30px);
   opacity: 0.4;
   max-height: 130px;
-  max-width: 354px;
+  max-width: 590px;
 }
 
 .neon-glow:before {
