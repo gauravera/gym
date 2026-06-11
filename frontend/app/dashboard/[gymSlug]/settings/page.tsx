@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Smartphone,
@@ -34,6 +35,20 @@ declare global {
 
 export default function WhatsAppSetupPage() {
   const { gymSlug } = useParams() as { gymSlug: string };
+
+  // Helper to extract nested Meta errors
+  async function parseError(res: Response, defaultMessage: string): Promise<string> {
+    try {
+      const data = await res.json();
+      const metaMessage = data.metaError?.error?.message || data.metaError?.message;
+      if (metaMessage) {
+        return `${data.error || defaultMessage} — ${metaMessage}`;
+      }
+      return data.error || defaultMessage;
+    } catch {
+      return defaultMessage;
+    }
+  }
 
   const [pageLoading, setPageLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -175,11 +190,11 @@ export default function WhatsAppSetupPage() {
       if (payload.type === "WA_EMBEDDED_SIGNUP") {
         console.log("📩 WA_EMBEDDED_SIGNUP:", payload);
 
-        if (payload.event === "FINISH") {
+        if (payload.event === "FINISH" || payload.event === "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING") {
           setSetupStep("WhatsApp account received from Meta...");
           const newSession = {
             whatsappBusinessId: payload.data.waba_id,
-            whatsappPhoneNumberId: payload.data.phone_number_id,
+            whatsappPhoneNumberId: payload.data.phone_number_id || "",
           };
           setEmbeddedSession(newSession);
           sessionRef.current = newSession;
@@ -233,9 +248,9 @@ export default function WhatsAppSetupPage() {
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Setup connection failed.");
+        const errorMsg = await parseError(res, "Setup connection failed.");
+        throw new Error(errorMsg);
       }
 
       toast.success("WhatsApp configuration updated successfully");
@@ -263,7 +278,8 @@ export default function WhatsAppSetupPage() {
         method: "POST",
       });
       if (!res.ok) {
-        throw new Error("Failed to disconnect.");
+        const errorMsg = await parseError(res, "Failed to disconnect.");
+        throw new Error(errorMsg);
       }
       toast.success("WhatsApp disconnected successfully");
       setIsEditing(false);
@@ -283,9 +299,9 @@ export default function WhatsAppSetupPage() {
       const res = await fetch(`/api/dashboard/${gymSlug}/whatsapp/refresh-status`, {
         method: "POST",
       });
-      const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to sync status");
+        const errorMsg = await parseError(res, "Failed to sync status");
+        throw new Error(errorMsg);
       }
       await loadStatus();
       toast.success("WhatsApp health status synced with Meta");
@@ -302,6 +318,10 @@ export default function WhatsAppSetupPage() {
       const res = await fetch(`/api/dashboard/${gymSlug}/whatsapp/reverify`, {
         method: "POST",
       });
+      if (!res.ok) {
+        const errorMsg = await parseError(res, "Re-verification failed");
+        throw new Error(errorMsg);
+      }
       const data = await res.json();
 
       if (data.whatsappVerificationStatus === "VERIFIED") {
@@ -309,9 +329,14 @@ export default function WhatsAppSetupPage() {
         setShowCodeInput(false);
         await loadStatus();
       } else {
-        await fetch(`/api/dashboard/${gymSlug}/whatsapp/register`, {
+        console.log("☎️ Registration retry requested. Initiating Meta request_code...");
+        const regRes = await fetch(`/api/dashboard/${gymSlug}/whatsapp/register`, {
           method: "POST",
         });
+        if (!regRes.ok) {
+          const regErrorMsg = await parseError(regRes, "Failed to request verification code");
+          throw new Error(regErrorMsg);
+        }
         setShowCodeInput(true);
         toast.info("A verification code has been sent to your WhatsApp number.");
       }
@@ -334,9 +359,9 @@ export default function WhatsAppSetupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code: verificationCode }),
       });
-      const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Verification code check failed.");
+        const errorMsg = await parseError(res, "Verification code check failed.");
+        throw new Error(errorMsg);
       }
       setShowCodeInput(false);
       setVerificationCode("");
@@ -357,9 +382,9 @@ export default function WhatsAppSetupPage() {
       const res = await fetch(`/api/dashboard/${gymSlug}/whatsapp/sync-templates`, {
         method: "POST",
       });
-      const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Template sync failed.");
+        const errorMsg = await parseError(res, "Template sync failed.");
+        throw new Error(errorMsg);
       }
       await loadStatus();
       toast.success("Templates synchronized successfully!");
@@ -411,6 +436,7 @@ export default function WhatsAppSetupPage() {
             setSaving(false);
             setSetupStep(null);
             setError("Failed to receive WhatsApp account details from Meta");
+            toast.error("Failed to receive WhatsApp account details from Meta");
             return;
           }
 
@@ -427,9 +453,9 @@ export default function WhatsAppSetupPage() {
               }),
             });
 
-            const data = await res.json();
             if (!res.ok) {
-              throw new Error(data.error || "Embedded setup failed");
+              const errorMsg = await parseError(res, "Embedded setup failed");
+              throw new Error(errorMsg);
             }
 
             toast.success("WhatsApp connected successfully");
@@ -437,6 +463,7 @@ export default function WhatsAppSetupPage() {
             await loadStatus();
           } catch (err: any) {
             setError(err.message || "Embedded signup failed");
+            toast.error(err.message || "Embedded signup failed");
           } finally {
             setSaving(false);
             setSetupStep(null);
@@ -447,7 +474,10 @@ export default function WhatsAppSetupPage() {
         config_id: config.facebookConfigId || "",
         response_type: "code",
         override_default_response_type: true,
-        extras: { version: "v3" },
+        extras: {
+          featureType: "whatsapp_business_app_onboarding",
+          sessionInfoVersion: "3",
+        },
       }
     );
   }
@@ -718,158 +748,7 @@ export default function WhatsAppSetupPage() {
               </div>
             </div>
 
-            {/* Analytics Dashboard */}
-            {config.analytics && (
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 backdrop-blur-md space-y-4">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-cyan-400" />
-                  Message Delivery Stats
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                  <div className="border border-zinc-900 bg-zinc-950 p-4 rounded-xl text-center">
-                    <span className="text-zinc-500 text-[9px] font-bold uppercase tracking-wider block">Sent</span>
-                    <span className="text-xl font-black text-white mt-1 block">{config.analytics.sent}</span>
-                  </div>
-                  <div className="border border-zinc-900 bg-zinc-950 p-4 rounded-xl text-center">
-                    <span className="text-zinc-500 text-[9px] font-bold uppercase tracking-wider block">Delivered</span>
-                    <span className="text-xl font-black text-emerald-400 mt-1 block">{config.analytics.delivered}</span>
-                  </div>
-                  <div className="border border-zinc-900 bg-zinc-950 p-4 rounded-xl text-center">
-                    <span className="text-zinc-500 text-[9px] font-bold uppercase tracking-wider block">Read</span>
-                    <span className="text-xl font-black text-cyan-400 mt-1 block">{config.analytics.read}</span>
-                  </div>
-                  <div className="border border-zinc-900 bg-zinc-950 p-4 rounded-xl text-center">
-                    <span className="text-zinc-500 text-[9px] font-bold uppercase tracking-wider block">Failed</span>
-                    <span className="text-xl font-black text-rose-400 mt-1 block">{config.analytics.failed}</span>
-                  </div>
-                  <div className="border border-zinc-900 bg-zinc-950 p-4 rounded-xl text-center col-span-2 sm:col-span-1">
-                    <span className="text-zinc-500 text-[9px] font-bold uppercase tracking-wider block">Total Traffic</span>
-                    <span className="text-xl font-black text-white mt-1 block">{config.analytics.total}</span>
-                  </div>
-                </div>
-              </div>
-            )}
 
-            {/* Configured Templates */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 backdrop-blur-md space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-cyan-400" />
-                  Synced Message Templates
-                </h3>
-                <button
-                  onClick={handleSyncTemplates}
-                  disabled={syncingTemplates}
-                  className="rounded-xl border border-zinc-850 hover:bg-zinc-900 px-3.5 py-1.5 text-xs font-bold text-zinc-300 transition-all disabled:opacity-50 flex items-center gap-1"
-                >
-                  <RefreshCcw className={`w-3 h-3 ${syncingTemplates ? "animate-spin" : ""}`} />
-                  Sync Templates
-                </button>
-              </div>
-
-              {config.templates && config.templates.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {config.templates.map((t) => (
-                    <div
-                      key={t.id}
-                      className="border border-zinc-900 bg-zinc-950 p-4 rounded-xl flex items-center justify-between text-xs"
-                    >
-                      <div className="space-y-1">
-                        <span className="font-bold text-white block">{t.templateName}</span>
-                        <span className="text-zinc-500 text-[10px] font-semibold uppercase">
-                          {t.category} • {t.language}
-                        </span>
-                      </div>
-                      <div>
-                        {t.status === "APPROVED" ? (
-                          <span className="rounded bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-extrabold text-emerald-400">
-                            APPROVED
-                          </span>
-                        ) : (
-                          <span className="rounded bg-zinc-800 border border-zinc-700 px-2 py-0.5 text-[9px] font-extrabold text-zinc-400">
-                            {t.status}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-zinc-600 italic py-4">No synced message templates. Connect to sync templates from Meta.</p>
-              )}
-            </div>
-
-            {/* Message Activity Log */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 backdrop-blur-md space-y-4">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Award className="w-4 h-4 text-cyan-400" />
-                Recent Message Logs
-              </h3>
-
-              <div className="overflow-x-auto">
-                {config.recentMessages && config.recentMessages.length > 0 ? (
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead>
-                      <tr className="border-b border-zinc-900 text-zinc-500 font-bold uppercase tracking-wider">
-                        <th className="py-2.5 px-3">Date</th>
-                        <th className="py-2.5 px-3">Sender/Recipient</th>
-                        <th className="py-2.5 px-3">Direction</th>
-                        <th className="py-2.5 px-3">Message</th>
-                        <th className="py-2.5 px-3">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-900/60">
-                      {config.recentMessages.map((m) => (
-                        <tr key={m.id} className="hover:bg-zinc-900/10 transition-all">
-                          <td className="py-3 px-3 text-zinc-400 font-mono">
-                            {new Date(m.createdAt).toLocaleDateString("en-IN", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </td>
-                          <td className="py-3 px-3 text-zinc-300 font-mono">
-                            {m.direction === "INBOUND" ? m.senderPhone : m.recipientPhone}
-                          </td>
-                          <td className="py-3 px-3">
-                            <span
-                              className={`rounded px-1.5 py-0.5 text-[10px] font-black uppercase ${
-                                m.direction === "INBOUND"
-                                  ? "bg-cyan-500/10 text-cyan-400"
-                                  : m.direction === "ECHO"
-                                  ? "bg-purple-500/10 text-purple-400"
-                                  : "bg-amber-500/10 text-amber-400"
-                              }`}
-                            >
-                              {m.direction}
-                            </span>
-                          </td>
-                          <td className="py-3 px-3 text-zinc-300 truncate max-w-[200px]" title={m.text}>
-                            {m.text}
-                          </td>
-                          <td className="py-3 px-3">
-                            <span
-                              className={`font-semibold ${
-                                m.status === "READ"
-                                  ? "text-cyan-400"
-                                  : m.status === "DELIVERED"
-                                  ? "text-emerald-400"
-                                  : m.status === "FAILED"
-                                  ? "text-rose-400"
-                                  : "text-zinc-400"
-                              }`}
-                            >
-                              {m.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <p className="text-xs text-zinc-600 italic py-4">No recent messaging records.</p>
-                )}
-              </div>
-            </div>
           </motion.div>
         )}
 
@@ -1096,19 +975,7 @@ export default function WhatsAppSetupPage() {
                     />
                   </div>
 
-                  {/* Meta Business ID */}
-                  <div>
-                    <label className="mb-2 block font-semibold text-zinc-400 uppercase tracking-wider text-[10px]">
-                      Meta Business Portfolio ID (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. 543210987654321"
-                      value={form.businessId}
-                      onChange={(e) => setForm({ ...form, businessId: e.target.value })}
-                      className="w-full rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-2.5 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-cyan-500"
-                    />
-                  </div>
+
 
                   {/* Access Token */}
                   <div>
@@ -1156,6 +1023,29 @@ export default function WhatsAppSetupPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      <ToastContainer theme="dark" position="bottom-right" />
+      <style>{`
+        :root {
+          --toastify-color-dark: #27272a !important; /* zinc-800 */
+          --toastify-color-info: #06b6d4 !important; /* cyan-500 */
+          --toastify-color-success: #10b981 !important; /* emerald-500 */
+          --toastify-color-warning: #f59e0b !important; /* amber-500 */
+          --toastify-color-error: #ef4444 !important; /* rose-500 */
+          --toastify-font-family: inherit !important;
+        }
+        .Toastify__toast {
+          border-radius: 16px !important;
+          border: 1px solid #3f3f46 !important; /* zinc-700 */
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+        }
+        .Toastify__toast--dark {
+          background-color: #27272a !important; /* zinc-800 dark grey */
+          color: #f4f4f5 !important; /* zinc-100 */
+        }
+        .Toastify__progress-bar--dark {
+          background: linear-gradient(to right, #06b6d4, #8b5cf6) !important; /* gradient slider */
+        }
+      `}</style>
     </div>
   );
 }

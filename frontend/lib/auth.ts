@@ -1,9 +1,10 @@
+
 import { fetchBackend } from './api-client';
 
 export interface JWTPayload {
   userId: string;
   email: string;
-  role: 'SUPERADMIN' | 'OWNER' | 'STAFF';
+  role: 'SUPERADMIN' | 'GYM_OWNER' | 'STAFF';
   gymId: string | null;
 }
 
@@ -42,8 +43,9 @@ export async function getSessionForGym(gymSlug: string): Promise<JWTPayload | nu
     const res = await fetchBackend('/api/auth/me');
     if (!res.ok) return null;
     const data = await res.json();
-    
-    if (!data.user || !data.user.gym || data.user.gym.slug !== gymSlug) {
+
+    const decodedGymSlug = decodeURIComponent(gymSlug).toLowerCase();
+    if (!data.user || !data.user.gym || data.user.gym.slug.toLowerCase() !== decodedGymSlug) {
       return null;
     }
 

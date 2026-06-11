@@ -1,0 +1,9 @@
+-- AlterEnum
+BEGIN;
+CREATE TYPE "Role_new" AS ENUM ('SUPERADMIN', 'GYM_OWNER', 'STAFF');
+ALTER TABLE "GymUser" ALTER COLUMN "role" DROP DEFAULT;
+ALTER TABLE "GymUser" ALTER COLUMN "role" TYPE "Role_new" USING ("role"::text::"Role_new");
+ALTER TABLE "GymUser" ALTER COLUMN "role" SET DEFAULT 'STAFF';
+DROP TYPE "Role";
+ALTER TYPE "Role_new" RENAME TO "Role";
+COMMIT;

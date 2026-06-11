@@ -1,0 +1,24 @@
+# Fitflow
+> Fitflow is your ultimate SaaS platform for gym management and fitness tracking.
+
+## Overview
+Fitflow helps fitness enthusiasts track their workouts and helps gym owners manage their memberships, payments, and schedules all in one place.
+
+## Features for Users
+- Track daily workouts and progress.
+- Connect with your local gym.
+- View personalized AI fitness recommendations.
+
+## Features for Gym Owners
+- Manage memberships and billing.
+- Send WhatsApp notifications to members.
+- Schedule classes and assign trainers.
+
+## Technology
+- Built with Next.js App Router.
+- Backend powered by Express, Prisma, and PostgreSQL.
+- AI features powered by Gemini.
+
+## Important Links
+- [Home](https://fitflow.app/)
+- [Contact Support](https://fitflow.app/support)

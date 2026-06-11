@@ -49,7 +49,11 @@ export default function MetricCard({
       </div>
 
       <div className="mt-4 flex items-baseline gap-2">
-        <span className="text-3xl font-extrabold tracking-tight text-white">{value}</span>
+        <span className={`text-3xl font-extrabold tracking-tight text-white transition-all duration-300 ${
+          glowColor === 'emerald' ? 'metric-glow-emerald' :
+          glowColor === 'orange' ? 'metric-glow-orange' :
+          glowColor === 'violet' ? 'metric-glow-violet' : 'metric-glow-cyan'
+        }`}>{value}</span>
         {change && (
           <span className={`text-xs font-semibold ${changeTextClasses[changeType]}`}>
             {change}

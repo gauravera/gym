@@ -1,19 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
-import { verifyJWT, JWTPayload } from '../lib/auth';
-import { db } from '../lib/db';
-
-export interface RequestWithUser extends Request {
-  user?: JWTPayload;
-}
+import { verifyJWT } from '../utils/auth.js';
+import prisma from '../prisma.js';
 
 /**
  * Middleware to authenticate requests via JWT cookie or header.
  */
-export async function authenticateToken(
-  req: RequestWithUser,
-  res: Response,
-  next: NextFunction
-): Promise<any> {
+export async function authenticateToken(req, res, next) {
   let token = req.cookies?.auth_token;
 
   if (!token) {
@@ -39,11 +30,7 @@ export async function authenticateToken(
 /**
  * Middleware to enforce strict gym-level tenant scoping.
  */
-export async function scopeToGym(
-  req: RequestWithUser,
-  res: Response,
-  next: NextFunction
-): Promise<any> {
+export async function scopeToGym(req, res, next) {
   const { gymSlug } = req.params;
   const user = req.user;
 
@@ -60,8 +47,8 @@ export async function scopeToGym(
   }
 
   // Fetch the gym using the slug in the URL parameter
-  const gym = await db.gym.findUnique({
-    where: { slug: gymSlug },
+  const gym = await prisma.gym.findUnique({
+    where: { slug: gymSlug.toLowerCase() },
   });
 
   if (!gym) {

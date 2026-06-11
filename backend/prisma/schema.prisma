@@ -8,7 +8,7 @@ generator client {
 
 enum Role {
   SUPERADMIN
-  OWNER
+  GYM_OWNER
   STAFF
 }
 
@@ -62,6 +62,14 @@ model Gym {
   whatsapp_waba_id         String?
   whatsapp_business_id     String?
   whatsapp_access_token    String?           // Encrypted string
+  whatsappStatus             String?           @default("disconnected")
+  whatsappVerifiedAt         DateTime?
+  whatsappLastError          String?
+  whatsappVerificationStatus String?           @default("NOT_VERIFIED")
+  whatsappQualityRating      String?           @default("UNKNOWN")
+  whatsappMessagingTier      String?           @default("UNKNOWN")
+  whatsappVerifiedName       String?
+  whatsappDisplayPhoneNumber String?
 
   users            GymUser[]
   members          Member[]

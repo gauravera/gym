@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { fetchBackend } from '@/lib/api-client';
+import ThemeToggle from '@/components/dashboard/ThemeToggle';
 import {
   Dumbbell,
   LayoutDashboard,
@@ -13,6 +14,7 @@ import {
   Settings,
   LogOut,
   UserCheck,
+  FileText,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -34,7 +36,8 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
   const gym = activeUser.gym;
 
   // Enforce tenant scoping and access check
-  if (!gym || (activeUser.role !== 'SUPERADMIN' && gym.slug !== params.gymSlug)) {
+  const decodedGymSlug = decodeURIComponent(params.gymSlug).toLowerCase();
+  if (!gym || (activeUser.role !== 'SUPERADMIN' && gym.slug.toLowerCase() !== decodedGymSlug)) {
     redirect('/login');
   }
 
@@ -45,11 +48,12 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
     { label: 'Payments Portal', icon: <CheckSquare className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/payments` },
     { label: 'Chatbot Configs', icon: <Bot className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/chatbot` },
     { label: 'Live Human Chat', icon: <MessageCircle className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/live-chat` },
+    { label: 'Message Templates', icon: <FileText className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/templates` },
     { label: 'Integrations Setup', icon: <Settings className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/settings` },
   ];
 
   return (
-    <div className="flex min-h-screen bg-zinc-950 font-sans text-zinc-100 relative overflow-hidden">
+    <div className="flex h-screen bg-zinc-950 font-sans text-zinc-100 relative overflow-hidden">
       {/* Background Lights */}
       <div className="absolute left-0 top-0 h-[400px] w-[400px] rounded-full bg-cyan-600/5 blur-[100px]" />
       <div className="absolute right-0 bottom-0 h-[400px] w-[400px] rounded-full bg-violet-600/5 blur-[100px]" />
@@ -121,7 +125,8 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
             <span className="text-sm font-extrabold text-white">{gym.name}</span>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
             <span className="rounded-full bg-cyan-500/10 px-3 py-1 text-[10px] font-bold text-cyan-400 border border-cyan-500/20">
               🟢 System Online
             </span>
