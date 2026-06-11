@@ -18,6 +18,7 @@ import {
   Info,
   ExternalLink,
   ChevronRight,
+  ChevronDown,
   Sparkles,
   Send,
   Eye,
@@ -25,7 +26,8 @@ import {
   HelpCircle,
   Flame,
   LayoutGrid,
-  List
+  List,
+  Filter
 } from 'lucide-react';
 
 interface TemplateComponent {
@@ -133,7 +135,7 @@ export default function MessageTemplatesPage() {
   const [categoryFilter, setCategoryFilter] = useState('ALL');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentTheme, setCurrentTheme] = useState<string>('dark');
-  const [showFilters, setShowFilters] = useState(true);
+
 
   // Custom Dropdowns State
   const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -504,235 +506,123 @@ export default function MessageTemplatesPage() {
       )}
 
       {/* Toolbar Filters Panel */}
-      <div className={`rounded-2xl p-4 backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs transition-all duration-300 ${
-        currentTheme === 'dark' ? 'border border-transparent bg-transparent' : 'border border-zinc-850 bg-zinc-950/70'
+      <div className={`relative z-20 rounded-2xl p-4 backdrop-blur-md flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs transition-all duration-300 ${
+        currentTheme === 'dark' ? 'bg-zinc-950/40' : 'bg-zinc-950/70'
       }`}>
         <div className="flex flex-1 flex-col sm:flex-row items-center justify-between gap-3 w-full">
-          {/* Custom Glowing Neon Search Input for Dark Theme */}
-          {currentTheme === 'dark' ? (
-            <div id="neon-poda" className="flex-1 w-full">
-              <div className="neon-glow"></div>
-              <div className="neon-darkBorderBg"></div>
-              <div className="neon-darkBorderBg"></div>
-              <div className="neon-darkBorderBg"></div>
-              <div className="neon-white"></div>
-              <div className="neon-border"></div>
-              <div id="neon-main">
-                <input
-                  placeholder="Search templates..."
-                  type="text"
-                  name="text"
-                  className="neon-input font-sans"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <div id="neon-pink-mask"></div>
-                <div className="neon-filterBorder"></div>
-                <div
-                  id="neon-filter-icon"
-                  onClick={() => setShowFilters(!showFilters)}
-                  title="Toggle Category/Status Filters"
-                >
-                  <svg
-                    preserveAspectRatio="none"
-                    height="27"
-                    width="27"
-                    viewBox="4.8 4.56 14.832 15.408"
-                    fill="none"
-                  >
-                    <path
-                      d="M8.16 6.65002H15.83C16.47 6.65002 16.99 7.17002 16.99 7.81002V9.09002C16.99 9.56002 16.7 10.14 16.41 10.43L13.91 12.64C13.56 12.93 13.33 13.51 13.33 13.98V16.48C13.33 16.83 13.1 17.29 12.81 17.47L12 17.98C11.24 18.45 10.2 17.92 10.2 16.99V13.91C10.2 13.5 9.97 12.98 9.73 12.69L7.52 10.36C7.23 10.08 7 9.55002 7 9.20002V7.87002C7 7.17002 7.52 6.65002 8.16 6.65002Z"
-                      stroke="#d6d6e6"
-                      strokeWidth="1"
-                      strokeMiterlimit="10"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    ></path>
-                  </svg>
-                </div>
-                <div id="neon-search-icon">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    viewBox="0 0 24 24"
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                    height="24"
-                    fill="none"
-                    className="feather feather-search"
-                  >
-                    <circle stroke="url(#search)" r="8" cy="11" cx="11"></circle>
-                    <line
-                      stroke="url(#searchl)"
-                      y2="16.65"
-                      y1="22"
-                      x2="16.65"
-                      x1="22"
-                    ></line>
-                    <defs>
-                      <linearGradient gradientTransform="rotate(50)" id="search">
-                        <stop stopColor="#f8e7f8" offset="0%"></stop>
-                        <stop stopColor="#b6a9b7" offset="50%"></stop>
-                      </linearGradient>
-                      <linearGradient id="searchl">
-                        <stop stopColor="#b6a9b7" offset="0%"></stop>
-                        <stop stopColor="#837484" offset="50%"></stop>
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-3 h-4 w-4 text-zinc-500" />
-              <input
-                type="text"
-                placeholder="Search by template name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-xl border border-zinc-850 bg-zinc-900/40 py-2.5 pl-10 pr-4 text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500 transition-all"
-              />
-            </div>
-          )}
+          {/* Search Input */}
+          <div className="relative flex-1 w-full">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-zinc-500">
+              <Search className="h-4 w-4" />
+            </span>
+            <input
+              type="text"
+              placeholder="Search templates..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full rounded-xl border border-zinc-800 bg-zinc-900/40 py-2.5 pl-10 pr-4 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30 transition-all"
+            />
+          </div>
 
           {/* Filters Selectors Dropdowns */}
-          {(showFilters || currentTheme !== 'dark') && (
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto sm:ml-auto">
-              {currentTheme === 'dark' ? (
-                <>
-                  {/* Custom Status Dropdown */}
-                  <div ref={statusRef} className="relative w-full sm:w-[180px]">
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto sm:ml-auto">
+            {/* Custom Status Dropdown */}
+            <div ref={statusRef} className="relative w-full sm:w-[180px]">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsStatusOpen(!isStatusOpen);
+                  setIsCategoryOpen(false);
+                }}
+                className="w-full text-left flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/60 px-4 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white transition-all focus:outline-none focus:border-cyan-500"
+              >
+                <span>
+                  {statusOptions.find((o) => o.value === statusFilter)?.label || 'All Statuses'}
+                </span>
+                <ChevronDown className="h-4 w-4 text-zinc-500" />
+              </button>
+              {isStatusOpen && (
+                <div className="absolute top-full mt-2 left-0 w-full min-w-[180px] bg-zinc-950/95 backdrop-blur-md border border-zinc-800 rounded-xl shadow-xl p-1 z-50 flex flex-col gap-1">
+                  {statusOptions.map((opt) => (
                     <button
+                      key={opt.value}
                       type="button"
                       onClick={() => {
-                        setIsStatusOpen(!isStatusOpen);
-                        setIsCategoryOpen(false);
-                      }}
-                      className="neon-select w-full sm:w-[180px] text-left flex items-center justify-between"
-                    >
-                      <span>
-                        {statusOptions.find((o) => o.value === statusFilter)?.label || 'All Statuses'}
-                      </span>
-                      <span className="w-3 h-3 flex items-center justify-center pointer-events-none opacity-0"></span>
-                    </button>
-                    {isStatusOpen && (
-                      <div className="neon-dropdown-menu w-full sm:w-[180px]">
-                        {statusOptions.map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => {
-                              setStatusFilter(opt.value);
-                              setIsStatusOpen(false);
-                            }}
-                            className={`neon-dropdown-item ${
-                              statusFilter === opt.value ? 'neon-dropdown-item-active' : ''
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Custom Category Dropdown */}
-                  <div ref={categoryRef} className="relative w-full sm:w-[180px]">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsCategoryOpen(!isCategoryOpen);
+                        setStatusFilter(opt.value);
                         setIsStatusOpen(false);
                       }}
-                      className="neon-select w-full sm:w-[180px] text-left flex items-center justify-between"
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        statusFilter === opt.value
+                          ? 'bg-cyan-500/10 text-cyan-400 font-semibold'
+                          : 'text-zinc-400 hover:text-white hover:bg-zinc-900/60'
+                      }`}
                     >
-                      <span>
-                        {categoryOptions.find((o) => o.value === categoryFilter)?.label || 'All Categories'}
-                      </span>
-                      <span className="w-3 h-3 flex items-center justify-center pointer-events-none opacity-0"></span>
+                      {opt.label}
                     </button>
-                    {isCategoryOpen && (
-                      <div className="neon-dropdown-menu w-full sm:w-[180px]">
-                        {categoryOptions.map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => {
-                              setCategoryFilter(opt.value);
-                              setIsCategoryOpen(false);
-                            }}
-                            className={`neon-dropdown-item ${
-                              categoryFilter === opt.value ? 'neon-dropdown-item-active' : ''
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="rounded-xl border border-zinc-850 bg-zinc-900/40 px-3.5 py-2.5 text-zinc-300 focus:outline-none focus:border-cyan-500 cursor-pointer text-xs"
-                  >
-                    <option value="ALL">All Statuses</option>
-                    <option value="DRAFT">Drafts</option>
-                    <option value="PENDING">Pending Approval</option>
-                    <option value="APPROVED">Approved</option>
-                    <option value="REJECTED">Rejected</option>
-                  </select>
-
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="rounded-xl border border-zinc-850 bg-zinc-900/40 px-3.5 py-2.5 text-zinc-300 focus:outline-none focus:border-cyan-500 cursor-pointer text-xs"
-                  >
-                    <option value="ALL">All Categories</option>
-                    <option value="UTILITY">Utility</option>
-                    <option value="MARKETING">Marketing</option>
-                    <option value="AUTHENTICATION">Authentication</option>
-                  </select>
-                </>
+                  ))}
+                </div>
               )}
             </div>
-          )}
+
+            {/* Custom Category Dropdown */}
+            <div ref={categoryRef} className="relative w-full sm:w-[180px]">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCategoryOpen(!isCategoryOpen);
+                  setIsStatusOpen(false);
+                }}
+                className="w-full text-left flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/60 px-4 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white transition-all focus:outline-none focus:border-cyan-500"
+              >
+                <span>
+                  {categoryOptions.find((o) => o.value === categoryFilter)?.label || 'All Categories'}
+                </span>
+                <ChevronDown className="h-4 w-4 text-zinc-500" />
+              </button>
+              {isCategoryOpen && (
+                <div className="absolute top-full mt-2 left-0 w-full min-w-[180px] bg-zinc-950/95 backdrop-blur-md border border-zinc-800 rounded-xl shadow-xl p-1 z-50 flex flex-col gap-1">
+                  {categoryOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setCategoryFilter(opt.value);
+                        setIsCategoryOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+                        categoryFilter === opt.value
+                          ? 'bg-cyan-500/10 text-cyan-400 font-semibold'
+                          : 'text-zinc-400 hover:text-white hover:bg-zinc-900/60'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 border-t border-zinc-900 pt-3 md:border-none md:pt-0 shrink-0">
           <span className="text-zinc-500 font-semibold mr-1">View:</span>
           <button
             onClick={() => setViewMode('grid')}
-            className={
-              currentTheme === 'dark'
-                ? viewMode === 'grid'
-                  ? 'neon-view-btn-active'
-                  : 'neon-view-btn'
-                : `p-2 rounded-lg border transition-all ${viewMode === 'grid'
-                    ? 'border-cyan-500/30 bg-cyan-500/5 text-cyan-400'
-                    : 'border-zinc-850 bg-zinc-900/20 text-zinc-500 hover:text-zinc-300'
-                  }`
-            }
+            className={`p-2 rounded-xl border transition-all ${
+              viewMode === 'grid'
+                ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.1)]'
+                : 'border-zinc-800 bg-zinc-900/40 text-zinc-500 hover:text-zinc-300'
+            }`}
           >
             <LayoutGrid className="h-4 w-4" />
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={
-              currentTheme === 'dark'
-                ? viewMode === 'list'
-                  ? 'neon-view-btn-active'
-                  : 'neon-view-btn'
-                : `p-2 rounded-lg border transition-all ${viewMode === 'list'
-                    ? 'border-cyan-500/30 bg-cyan-500/5 text-cyan-400'
-                    : 'border-zinc-850 bg-zinc-900/20 text-zinc-500 hover:text-zinc-300'
-                  }`
-            }
+            className={`p-2 rounded-xl border transition-all ${
+              viewMode === 'list'
+                ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.1)]'
+                : 'border-zinc-800 bg-zinc-900/40 text-zinc-500 hover:text-zinc-300'
+            }`}
           >
             <List className="h-4 w-4" />
           </button>
