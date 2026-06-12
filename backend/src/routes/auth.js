@@ -99,13 +99,8 @@ router.post('/register', async (req, res) => {
     res.cookie('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-<<<<<<< HEAD:backend/src/routes/auth.ts
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 30 * 1000, // 30 days in ms
-=======
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7 * 1000, // 7 days in ms
->>>>>>> ba8dc4102102cd74b42de552cd2475a924fdfa0b:backend/src/routes/auth.js
       path: '/',
     });
 
@@ -165,13 +160,8 @@ router.post('/login', async (req, res) => {
     res.cookie('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-<<<<<<< HEAD:backend/src/routes/auth.ts
-      sameSite: 'strict',
-      maxAge,
-=======
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7 * 1000, // 7 days in ms
->>>>>>> ba8dc4102102cd74b42de552cd2475a924fdfa0b:backend/src/routes/auth.js
       path: '/',
     });
 

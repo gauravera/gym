@@ -25,7 +25,7 @@ import { queueService } from './services/queue-service';
 import { cronJobs } from './jobs/cron-jobs';
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5000;
 
 // Configure CORS to work with Next.js frontend rewriting and direct access
 const allowedOrigins = [
