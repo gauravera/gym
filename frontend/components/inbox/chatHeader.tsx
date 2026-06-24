@@ -78,21 +78,21 @@ export default function ChatHeader({
   const currentStatus = conversation.status || "new";
 
   return (
-    <div className="relative z-50 bg-zinc-950 px-3 sm:px-4 py-2.5 flex items-center justify-between border-b border-zinc-900 flex-shrink-0 shadow-sm">
+    <div className="relative z-20 bg-zinc-900 px-4 py-3.5 flex items-center justify-between border-b border-zinc-800 flex-shrink-0 shadow-sm">
       <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
         {onBack && (
           <button onClick={onBack} className="md:hidden">
-            <ArrowLeft className="w-5 h-5 text-white" />
+            <ArrowLeft className="w-5 h-5 text-zinc-100" />
           </button>
         )}
 
-        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-cyan-600 to-cyan-500/70 flex items-center justify-center text-white font-semibold flex-shrink-0">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-cyan-600 to-cyan-500/70 flex items-center justify-center text-white font-extrabold flex-shrink-0 shadow-sm">
           {conversation.companyName?.charAt(0)?.toUpperCase() || "?"}
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-medium text-sm sm:text-base text-white truncate">
+            <h3 className="font-bold text-sm sm:text-base text-zinc-100 truncate">
               {conversation.companyName}
             </h3>
             {conversation.isBlocked && (
@@ -101,7 +101,7 @@ export default function ChatHeader({
               </span>
             )}
           </div>
-          <p className="text-[10px] sm:text-xs text-zinc-500 truncate">
+          <p className="text-xs text-zinc-400 truncate">
             {conversation.phone}
           </p>
         </div>
@@ -113,7 +113,7 @@ export default function ChatHeader({
           <div className="relative block" ref={statusRef}>
             <button
               onClick={() => setIsStatusOpen(!isStatusOpen)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${statusColors[currentStatus] || "bg-zinc-900 text-zinc-300"}`}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border transition-colors cursor-pointer ${statusColors[currentStatus] || "bg-zinc-950 text-zinc-300 border-zinc-800"}`}
             >
               <div className={`w-2 h-2 rounded-full bg-current opacity-70`} />
               {statusLabels[currentStatus] || currentStatus}
@@ -121,7 +121,7 @@ export default function ChatHeader({
             </button>
 
             {isStatusOpen && (
-              <div className="absolute top-full right-0 mt-2 w-48 bg-zinc-900 border border-zinc-850 rounded-lg shadow-xl py-1 z-[100] overflow-hidden">
+              <div className="absolute top-full right-0 mt-2 w-48 bg-zinc-950 border border-zinc-800 rounded-xl shadow-xl py-1.5 z-[100] overflow-hidden">
                 {Object.entries(statusLabels).map(([key, label]) => (
                   <button
                     key={key}
@@ -166,7 +166,7 @@ export default function ChatHeader({
                         },
                       );
                     }}
-                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-zinc-800 transition-colors flex items-center gap-3 cursor-pointer ${key === currentStatus ? "bg-zinc-800 font-medium" : "text-zinc-200"}`}
+                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-zinc-900 transition-colors flex items-center gap-3 cursor-pointer ${key === currentStatus ? "bg-zinc-900 font-bold" : "text-zinc-300"}`}
                   >
                     <div
                       className="w-2.5 h-2.5 rounded-full bg-zinc-500"
@@ -179,30 +179,30 @@ export default function ChatHeader({
           </div>
         )}
 
-        <motion.button className="hidden sm:flex p-2 rounded-full hover:bg-zinc-800">
-          <Video className="w-5 h-5 text-zinc-400" />
+        <motion.button className="hidden sm:flex p-2 rounded-xl hover:bg-zinc-850 text-zinc-400 hover:text-zinc-100 transition-all cursor-pointer">
+          <Video className="w-5 h-5" />
         </motion.button>
-        <motion.button className="hidden sm:flex p-2 rounded-full hover:bg-zinc-800">
-          <Phone className="w-5 h-5 text-zinc-400" />
+        <motion.button className="hidden sm:flex p-2 rounded-xl hover:bg-zinc-850 text-zinc-400 hover:text-zinc-100 transition-all cursor-pointer">
+          <Phone className="w-5 h-5" />
         </motion.button>
         
         {onToggleBlock && (
           <div className="relative" ref={menuRef}>
             <motion.button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-1.5 sm:p-2 rounded-full hover:bg-zinc-800 flex items-center justify-center"
+              className="p-2 rounded-xl hover:bg-zinc-850 text-zinc-400 hover:text-zinc-100 transition-all cursor-pointer flex items-center justify-center"
             >
-              <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-400" />
+              <MoreVertical className="w-5 h-5" />
             </motion.button>
 
             {isMenuOpen && (
-              <div className="absolute top-full right-0 mt-2 w-48 bg-zinc-900 border border-zinc-850 rounded-lg shadow-xl py-1 z-[100] overflow-hidden">
+              <div className="absolute top-full right-0 mt-2 w-48 bg-zinc-950 border border-zinc-800 rounded-xl shadow-xl py-1.5 z-[100] overflow-hidden">
                 <button
                   onClick={() => {
                     setIsMenuOpen(false);
                     onToggleBlock();
                   }}
-                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-zinc-800 transition-colors flex items-center gap-2.5 cursor-pointer ${
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-zinc-900 transition-colors flex items-center gap-2.5 cursor-pointer ${
                     conversation.isBlocked
                       ? "text-green-400"
                       : "text-rose-500"

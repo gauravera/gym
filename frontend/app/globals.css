@@ -22,6 +22,14 @@
   --color-zinc-300: var(--color-zinc-300);
   --color-zinc-200: var(--color-zinc-200);
   --color-zinc-100: var(--color-zinc-100);
+  --color-wa-chat-bg: var(--wa-chat-bg);
+
+  --color-bubble-outbound-bg: var(--bubble-outbound-bg);
+  --color-bubble-outbound-text: var(--bubble-outbound-text);
+  --color-bubble-outbound-meta: var(--bubble-outbound-meta);
+  --color-bubble-inbound-bg: var(--bubble-inbound-bg);
+  --color-bubble-inbound-text: var(--bubble-inbound-text);
+  --color-bubble-inbound-meta: var(--bubble-inbound-meta);
 }
 
 body {
@@ -34,24 +42,32 @@ body {
    THEME STYLING OVERRIDES (DARK, GREY, LIGHT)
    ===================================================== */
 
-/* Default / Dark Theme */
+/* Default / Dark Theme (Refined Visual Hierarchy: Deep Slate & Steel) */
 :root, [data-theme="dark"] {
-  --color-zinc-950: #09090b;
-  --color-zinc-900: #18181b;
-  --color-zinc-850: #202024;
-  --color-zinc-800: #27272a;
-  --color-zinc-700: #3f3f46;
-  --color-zinc-600: #52525b;
-  --color-zinc-500: #71717a;
-  --color-zinc-400: #a1a1aa;
-  --color-zinc-300: #d4d4d8;
-  --color-zinc-200: #e4e4e7;
-  --color-zinc-100: #f4f4f5;
+  --color-zinc-950: #0d0f14; /* Level 3: Content Canvas */
+  --color-zinc-900: #151a24; /* Level 2: Sub-sidebar & Panels */
+  --color-zinc-850: #1e2430; /* Card Elements & Active selections */
+  --color-zinc-800: #262e3d; /* Borders */
+  --color-zinc-700: #8899a6;
+  --color-zinc-600: #4a5a6a;
+  --color-zinc-500: #5d6d7e;
+  --color-zinc-400: #8899a6;
+  --color-zinc-300: #cbd5e1;
+  --color-zinc-200: #e1e8ed;
+  --color-zinc-100: #ffffff;
   --color-white: #ffffff;
-  --color-black: #000000;
+  --color-black: #0d0f14;
   
-  --background: #09090b;
-  --foreground: #f4f4f5;
+  --background: #0d0f14;
+  --foreground: #ffffff;
+  --wa-chat-bg: #0d0f14;
+ 
+  --bubble-outbound-bg: #005c4b;
+  --bubble-outbound-text: #e9edef;
+  --bubble-outbound-meta: #8899a6;
+  --bubble-inbound-bg: #1c2431;
+  --bubble-inbound-text: #ffffff;
+  --bubble-inbound-meta: #8899a6;
 }
 
 /* Coloured Theme (Light Sky Blue background #C4E2F5 with Steel Blue #7AAACE highlights) */
@@ -72,6 +88,14 @@ body {
 
   --background: #C4E2F5;
   --foreground: #0f172a;
+  --wa-chat-bg: #374151;
+
+  --bubble-outbound-bg: #005c4b;
+  --bubble-outbound-text: #e9edef;
+  --bubble-outbound-meta: #8696a0;
+  --bubble-inbound-bg: #202c33;
+  --bubble-inbound-text: #e9edef;
+  --bubble-inbound-meta: #8696a0;
 }
 
 /* Light Theme (Fully inverted light layout) */
@@ -92,6 +116,14 @@ body {
 
   --background: #ffffff;
   --foreground: #09090b;
+  --wa-chat-bg: #efeae2;
+
+  --bubble-outbound-bg: #d9fdd3;
+  --bubble-outbound-text: #111b21;
+  --bubble-outbound-meta: #667781;
+  --bubble-inbound-bg: #ffffff;
+  --bubble-inbound-text: #111b21;
+  --bubble-inbound-meta: #667781;
 }
 
 /* Page global background transitions */
