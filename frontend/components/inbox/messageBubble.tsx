@@ -32,12 +32,14 @@ function AudioPlayer({
   isDownloading,
   onDownload,
   mockSize,
+  downloadProgress,
 }: {
   mediaUrl: string;
   isDownloaded: boolean;
   isDownloading: boolean;
   onDownload: () => void;
   mockSize: string;
+  downloadProgress: number;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -91,7 +93,7 @@ function AudioPlayer({
       >
         {!isDownloaded ? (
           isDownloading ? (
-            <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+            <MiniCircularProgress progress={downloadProgress} />
           ) : (
             <svg
               width="16"
@@ -187,7 +189,81 @@ function AudioPlayer({
   );
 }
 
+function CircularProgress({ progress }: { progress: number }) {
+  const radius = 20;
+  const stroke = 3;
+  const normalizedRadius = radius - stroke;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
 
+  return (
+    <div className="relative flex items-center justify-center w-12 h-12">
+      <svg className="w-12 h-12 transform -rotate-90" viewBox="0 0 48 48">
+        <circle
+          fill="transparent"
+          stroke="rgba(255, 255, 255, 0.15)"
+          strokeWidth={stroke}
+          r={normalizedRadius}
+          cx="24"
+          cy="24"
+        />
+        <circle
+          fill="transparent"
+          stroke="#00ed64"
+          strokeWidth={stroke}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          r={normalizedRadius}
+          cx="24"
+          cy="24"
+          className="transition-all duration-75 ease-out"
+        />
+      </svg>
+      <span className="absolute text-[9px] font-bold text-white select-none leading-none">
+        {Math.round(progress)}%
+      </span>
+    </div>
+  );
+}
+
+function MiniCircularProgress({ progress }: { progress: number }) {
+  const radius = 16;
+  const stroke = 2.5;
+  const normalizedRadius = radius - stroke;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+  return (
+    <div className="relative flex items-center justify-center w-8 h-8">
+      <svg className="w-8 h-8 transform -rotate-90" viewBox="0 0 32 32">
+        <circle
+          fill="transparent"
+          stroke="rgba(6, 182, 212, 0.15)"
+          strokeWidth={stroke}
+          r={normalizedRadius}
+          cx="16"
+          cy="16"
+        />
+        <circle
+          fill="transparent"
+          stroke="#00ed64"
+          strokeWidth={stroke}
+          strokeDasharray={`${circumference} ${circumference}`}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          r={normalizedRadius}
+          cx="16"
+          cy="16"
+          className="transition-all duration-75 ease-out"
+        />
+      </svg>
+      <span className="absolute text-[8px] font-bold text-[#00ed64] select-none leading-none">
+        {Math.round(progress)}
+      </span>
+    </div>
+  );
+}
 
 function getStableMockSize(messageId: string, type: string) {
   let hash = 0;
@@ -234,6 +310,7 @@ export default function MessageBubble({
     return false;
   });
   const [isDownloadingMedia, setIsDownloadingMedia] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
 
 
@@ -297,9 +374,56 @@ export default function MessageBubble({
   const handleDownloadMedia = async () => {
     if (isDownloadingMedia) return;
     setIsDownloadingMedia(true);
+    setDownloadProgress(0);
+
+    let currentProgress = 0;
+    let targetProgress = 0;
+    let animationFrameId: number;
+
+    const animate = () => {
+      if (currentProgress < targetProgress) {
+        const diff = targetProgress - currentProgress;
+        const step = Math.max(1.5, diff * 0.12);
+        currentProgress = Math.min(targetProgress, currentProgress + step);
+        setDownloadProgress(currentProgress);
+      }
+      if (currentProgress < 100) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+
     try {
       const response = await fetch(effectiveMediaUrl!);
       if (!response.ok) throw new Error("Failed to fetch media");
+      
+      const contentLength = +(
+        response.headers.get("content-length") || 
+        response.headers.get("Content-Length") || 
+        0
+      );
+      
+      if (contentLength > 0 && response.body) {
+        const reader = response.body.getReader();
+        let receivedLength = 0;
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            targetProgress = 100;
+            break;
+          }
+          receivedLength += value.length;
+          targetProgress = Math.min(98, (receivedLength / contentLength) * 100);
+        }
+      } else {
+        targetProgress = 100;
+      }
+
+      while (currentProgress < 100) {
+        await new Promise((resolve) => setTimeout(resolve, 30));
+      }
       
       localStorage.setItem(storageKey, "true");
       setIsDownloaded(true);
@@ -308,7 +432,9 @@ export default function MessageBubble({
       localStorage.setItem(storageKey, "true");
       setIsDownloaded(true);
     } finally {
+      cancelAnimationFrame(animationFrameId);
       setIsDownloadingMedia(false);
+      setDownloadProgress(0);
     }
   };
 
@@ -491,7 +617,7 @@ export default function MessageBubble({
                     >
                       <div className="w-12 h-12 rounded-full bg-black/50 hover:bg-black/70 border border-white/25 flex items-center justify-center shadow-lg transition-all active:scale-95">
                         {isDownloadingMedia ? (
-                          <Loader2 className="w-5 h-5 text-white animate-spin" />
+                          <CircularProgress progress={downloadProgress} />
                         ) : (
                           <svg
                             width="20"
@@ -508,7 +634,7 @@ export default function MessageBubble({
                         )}
                       </div>
                       <span className="text-[11px] font-medium text-white/90 bg-black/30 px-2 py-0.5 rounded-full backdrop-blur-[2px] select-none">
-                        {isDownloadingMedia ? "Loading..." : getStableMockSize(msg.whatsappMessageId || msg.id, "image")}
+                        {isDownloadingMedia ? `Loading... ${Math.round(downloadProgress)}%` : getStableMockSize(msg.whatsappMessageId || msg.id, "image")}
                       </span>
                     </button>
                   </div>
@@ -578,7 +704,7 @@ export default function MessageBubble({
                     >
                       <div className="w-12 h-12 rounded-full bg-black/50 hover:bg-black/70 border border-white/25 flex items-center justify-center shadow-lg transition-all active:scale-95">
                         {isDownloadingMedia ? (
-                          <Loader2 className="w-5 h-5 text-white animate-spin" />
+                          <CircularProgress progress={downloadProgress} />
                         ) : (
                           <svg
                             width="20"
@@ -595,7 +721,7 @@ export default function MessageBubble({
                         )}
                       </div>
                       <span className="text-[11px] font-medium text-white/90 bg-black/30 px-2 py-0.5 rounded-full backdrop-blur-[2px] select-none">
-                        {isDownloadingMedia ? "Loading..." : getStableMockSize(msg.whatsappMessageId || msg.id, "video")}
+                        {isDownloadingMedia ? `Loading... ${Math.round(downloadProgress)}%` : getStableMockSize(msg.whatsappMessageId || msg.id, "video")}
                       </span>
                     </button>
                   </div>
@@ -645,6 +771,7 @@ export default function MessageBubble({
                   isDownloading={isDownloadingMedia}
                   onDownload={handleDownloadMedia}
                   mockSize={getStableMockSize(msg.whatsappMessageId || msg.id, "audio")}
+                  downloadProgress={downloadProgress}
                 />
                 {!cleanText &&
                   renderTimestamp({ customClass: "absolute bottom-1 right-2" })}
@@ -674,7 +801,7 @@ export default function MessageBubble({
                   <p className="text-xs opacity-70 select-none">
                     {effectiveMimeType?.split("/")[1]?.toUpperCase() || "FILE"} • {
                       !isDownloaded 
-                        ? (isDownloadingMedia ? "Loading..." : getStableMockSize(msg.whatsappMessageId || msg.id, "document"))
+                        ? (isDownloadingMedia ? `Loading... ${Math.round(downloadProgress)}%` : getStableMockSize(msg.whatsappMessageId || msg.id, "document"))
                         : "Loaded in App"
                     }
                   </p>
@@ -685,7 +812,7 @@ export default function MessageBubble({
                   className="shrink-0 w-10 h-10 rounded-full bg-cyan-600/10 hover:bg-cyan-600/20 flex items-center justify-center transition-colors text-cyan-400 disabled:opacity-80"
                 >
                   {isDownloadingMedia ? (
-                    <Loader2 className="w-4 h-4 text-cyan-400 animate-spin" />
+                    <MiniCircularProgress progress={downloadProgress} />
                   ) : !isDownloaded ? (
                     <svg
                       width="20"

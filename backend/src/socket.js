@@ -110,12 +110,10 @@ export function initSocket(httpServer) {
       // Note: We can implement gym-based verification for conversation access
       // For now, allow joining if the conversation is associated with the gym.
       socket.join(`conversation:${conversationId}`);
-      console.log(`👤 User ${userId} joined conversation:${conversationId}`);
     });
 
     socket.on("leave-conversation", (conversationId) => {
       socket.leave(`conversation:${conversationId}`);
-      console.log(`👤 User ${userId} left conversation:${conversationId}`);
     });
 
     socket.on("disconnect", (reason) => {
