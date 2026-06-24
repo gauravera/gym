@@ -23,9 +23,34 @@ export default function ThemeToggle() {
   }, []);
 
   const changeTheme = (newTheme: Theme) => {
+    // Inject a style block to disable all transitions temporarily during the theme switch
+    const css = document.createElement("style");
+    css.type = "text/css";
+    css.appendChild(
+      document.createTextNode(
+        `* {
+           -webkit-transition: none !important;
+           -moz-transition: none !important;
+           -o-transition: none !important;
+           -ms-transition: none !important;
+           transition: none !important;
+         }`
+      )
+    );
+    document.head.appendChild(css);
+
+    // Apply the new theme
     setTheme(newTheme);
     localStorage.setItem("fitflow-theme", newTheme);
     document.documentElement.setAttribute("data-theme", newTheme);
+
+    // Force a reflow, flushing the CSS changes
+    const _ = window.getComputedStyle(css).opacity;
+
+    // Remove the style block after the repaint to restore normal hover transitions
+    setTimeout(() => {
+      document.head.removeChild(css);
+    }, 20);
   };
 
   // Prevent hydration mismatch layout shifts

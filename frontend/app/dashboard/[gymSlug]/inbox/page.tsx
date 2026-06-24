@@ -54,8 +54,8 @@ const mapApiConversation = (c: any): Conversation => {
     lastMessageStatus: c.lastMessage?.status,
     unreadCount,
     hasUnread: unreadCount > 0,
-    sessionStarted: c.sessionStarted ?? true,
-    sessionActive: c.sessionActive ?? true,
+    sessionStarted: c.sessionStarted ?? false,
+    sessionActive: c.sessionActive ?? false,
     sessionExpiresAt: c.sessionExpiresAt ?? null,
     templateRequired: c.sessionActive === false,
     isBlocked: !!c.isBlocked,
@@ -201,7 +201,7 @@ function ChatArea({
 
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const genericInputRef = useRef<HTMLInputElement | null>(null);
-  const isSessionActive = conversation.sessionActive !== false;
+  const isSessionActive = !!conversation.sessionActive;
 
   useChatSocket({
     conversationId: conversation.id,

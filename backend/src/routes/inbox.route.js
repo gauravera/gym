@@ -92,6 +92,24 @@ router.get("/", async (req, res) => {
         });
 
         const parsedText = lastMessage ? parseMessageText(lastMessage.text) : null;
+
+        // Compute WhatsApp 24-hour session window details
+        const lastInbound = await prisma.whatsAppMessage.findFirst({
+          where: {
+            gymId: gym.id,
+            direction: "INBOUND",
+            senderPhone: member.phone
+          },
+          orderBy: { createdAt: "desc" }
+        });
+
+        const now = new Date();
+        const sessionStarted = !!lastInbound;
+        const sessionExpiresAt = lastInbound 
+          ? new Date(new Date(lastInbound.createdAt).getTime() + 24 * 60 * 60 * 1000) 
+          : null;
+        const sessionActive = sessionExpiresAt ? sessionExpiresAt > now : false;
+
         return {
           id: member.id,
           name: member.name,
@@ -109,7 +127,10 @@ router.get("/", async (req, res) => {
               }
             : null,
           lastMessageAt: lastMessage ? lastMessage.createdAt : member.updatedAt,
-          unreadCount
+          unreadCount,
+          sessionStarted,
+          sessionActive,
+          sessionExpiresAt
         };
       })
     );
