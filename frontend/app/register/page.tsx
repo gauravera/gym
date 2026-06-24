@@ -39,7 +39,11 @@ export default function RegisterPage() {
       if (res.ok && data.success) {
         setSuccess(true);
         setTimeout(() => {
-          router.push('/login');
+          if (data.gym?.slug) {
+            router.push(`/dashboard/${data.gym.slug}`);
+          } else {
+            router.push('/login');
+          }
         }, 2000);
       } else {
         setError(data.error || 'Failed to register. Please try again.');
@@ -86,7 +90,7 @@ export default function RegisterPage() {
 
           {success && (
             <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-semibold text-emerald-400">
-              🎉 Gym registered successfully! Redirecting you to login...
+              🎉 Gym registered successfully! Logging you in and redirecting to dashboard...
             </div>
           )}
 

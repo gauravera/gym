@@ -371,16 +371,16 @@ export default function MessageTemplatesPage() {
 
       const data = await res.json();
       if (res.ok) {
-        toast.success('Draft template saved successfully!');
+        toast.success('Template submitted to Meta successfully!');
         resetForm();
         setIsCreateOpen(false);
         fetchTemplates();
       } else {
-        toast.error(data.error || 'Failed to create template draft.');
+        toast.error(data.error || 'Failed to submit template to Meta.');
       }
     } catch (err) {
       console.error(err);
-      toast.error('An unexpected error occurred while saving.');
+      toast.error('An unexpected error occurred during submission.');
     } finally {
       setIsSavingDraft(false);
     }
@@ -474,7 +474,8 @@ export default function MessageTemplatesPage() {
 
           <button
             onClick={() => setIsCreateOpen(true)}
-            className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
+            disabled={!isConnected}
+            className={`flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
               currentTheme === 'dark'
                 ? 'neon-btn-primary'
                 : 'bg-cyan-600 text-white hover:bg-cyan-500'
@@ -861,182 +862,200 @@ export default function MessageTemplatesPage() {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
             />
 
-             {/* Sliding drawer */}
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="fixed right-0 top-0 h-full w-full max-w-md bg-zinc-950/80 backdrop-blur-xl border-l border-zinc-900 shadow-2xl z-50 flex flex-col justify-between overflow-hidden"
-            >
-              {/* Decorative glows */}
-              <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
-              <div className="absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
+            {/* Centered Modal Container */}
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="relative w-full max-w-xl max-h-[90vh] bg-zinc-950 border border-zinc-900 shadow-2xl rounded-2xl flex flex-col justify-between overflow-hidden pointer-events-auto"
+              >
+                {/* Decorative glows */}
+                <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
+                <div className="absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
 
-              {/* Drawer Header */}
-              <div className="flex items-center justify-between border-b border-zinc-900/60 p-5 relative z-10 bg-zinc-950/40">
-                <div>
-                  <h3 className="font-extrabold text-sm text-white flex items-center gap-1.5 uppercase tracking-wide">
-                    <Eye className="h-4 w-4 text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
-                    Template Preview
-                  </h3>
-                  <span className="text-[10px] text-zinc-400 font-mono mt-1.5 px-2 py-0.5 rounded bg-zinc-900/60 border border-zinc-800/80 w-fit block">{selectedTemplate.templateName}</span>
-                </div>
-                <button
-                  onClick={() => setSelectedTemplate(null)}
-                  className="rounded-lg p-1.5 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-
-              {/* Drawer Content */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 relative z-10">
-                {/* Meta details cards */}
-                <div className="grid grid-cols-2 gap-3.5">
-                  <div className="bg-zinc-900/40 border border-zinc-900 hover:border-zinc-800/80 rounded-xl p-3.5 flex flex-col justify-between transition-all duration-300">
-                    <span className="text-zinc-500 text-[9px] uppercase tracking-wider font-semibold">Approval Status</span>
-                    {getStatusBadge(selectedTemplate.status)}
+                {/* Drawer Header */}
+                <div className="flex items-center justify-between border-b border-zinc-900/60 p-5 relative z-10 bg-zinc-950/40">
+                  <div>
+                    <h3 className="font-extrabold text-sm text-white flex items-center gap-1.5 uppercase tracking-wide">
+                      <Eye className="h-4 w-4 text-cyan-400 drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+                      Template Preview
+                    </h3>
+                    <span className="text-[10px] text-zinc-400 font-mono mt-1.5 px-2 py-0.5 rounded bg-zinc-900/60 border border-zinc-800/80 w-fit block">{selectedTemplate.templateName}</span>
                   </div>
-                  
-                  <div className="bg-zinc-900/40 border border-zinc-900 hover:border-zinc-800/80 rounded-xl p-3.5 flex flex-col justify-between transition-all duration-300">
-                    <span className="text-zinc-500 text-[9px] uppercase tracking-wider font-semibold">Template Category</span>
-                    <span className="font-bold text-zinc-100 mt-1 block uppercase text-xs">{selectedTemplate.category}</span>
-                  </div>
-                  
-                  <div className="bg-zinc-900/40 border border-zinc-900 hover:border-zinc-800/80 rounded-xl p-3.5 flex flex-col justify-between transition-all duration-300">
-                    <span className="text-zinc-500 text-[9px] uppercase tracking-wider font-semibold">Language Code</span>
-                    <span className="font-bold text-zinc-300 mt-1 block uppercase text-xs">{selectedTemplate.language}</span>
-                  </div>
-                  
-                  <div className="bg-zinc-900/40 border border-zinc-900 hover:border-zinc-800/80 rounded-xl p-3.5 flex flex-col justify-between transition-all duration-300">
-                    <span className="text-zinc-500 text-[9px] uppercase tracking-wider font-semibold">Meta ID</span>
-                    <span className="font-mono text-zinc-400 mt-1 block truncate text-[11px]" title={selectedTemplate.metaTemplateId || 'N/A'}>
-                      {selectedTemplate.metaTemplateId || 'Not registered'}
-                    </span>
-                  </div>
+                  <button
+                    onClick={() => setSelectedTemplate(null)}
+                    className="rounded-lg p-1.5 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
 
-                {/* WhatsApp Chat Preview */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#00a884] animate-pulse" />
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">WhatsApp Message Preview</span>
+                {/* Drawer Content */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 relative z-10">
+                  {/* Meta details cards */}
+                  <div className="grid grid-cols-4 gap-2.5">
+                    <div className="bg-zinc-900/40 border border-zinc-900 hover:border-zinc-800/80 rounded-xl p-2.5 flex flex-col justify-between transition-all duration-300">
+                      <span className="text-zinc-500 text-[9px] uppercase tracking-wider font-semibold">Approval Status</span>
+                      {getStatusBadge(selectedTemplate.status)}
+                    </div>
+                    
+                    <div className="bg-zinc-900/40 border border-zinc-900 hover:border-zinc-800/80 rounded-xl p-2.5 flex flex-col justify-between transition-all duration-300">
+                      <span className="text-zinc-500 text-[9px] uppercase tracking-wider font-semibold">Template Category</span>
+                      <span className="font-bold text-zinc-100 mt-1 block uppercase text-[10px] truncate" title={selectedTemplate.category}>{selectedTemplate.category}</span>
+                    </div>
+                    
+                    <div className="bg-zinc-900/40 border border-zinc-900 hover:border-zinc-800/80 rounded-xl p-2.5 flex flex-col justify-between transition-all duration-300">
+                      <span className="text-zinc-500 text-[9px] uppercase tracking-wider font-semibold">Language Code</span>
+                      <span className="font-bold text-zinc-300 mt-1 block uppercase text-[10px] truncate" title={selectedTemplate.language}>{selectedTemplate.language}</span>
+                    </div>
+                    
+                    <div className="bg-zinc-900/40 border border-zinc-900 hover:border-zinc-800/80 rounded-xl p-2.5 flex flex-col justify-between transition-all duration-300">
+                      <span className="text-zinc-500 text-[9px] uppercase tracking-wider font-semibold">Meta ID</span>
+                      <span className="font-mono text-zinc-400 mt-1 block truncate text-[10px]" title={selectedTemplate.metaTemplateId || 'N/A'}>
+                        {selectedTemplate.metaTemplateId || 'Not registered'}
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="rounded-2xl border border-[#2d3a42]/60 bg-[#0b141a] overflow-hidden shadow-2xl max-w-full sm:max-w-xs font-sans relative">
-                    {/* WhatsApp Header Mockup */}
-                    <div className="bg-[#202c33] px-3.5 py-2.5 flex items-center justify-between border-b border-[#2d3a42]">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-zinc-400 text-sm cursor-pointer select-none">←</span>
-                        <div className="w-8 h-8 rounded-full bg-cyan-600 flex items-center justify-center text-white font-extrabold text-xs">
-                          <FileText className="w-4 h-4 text-white" />
-                        </div>
-                        <div>
-                          <span className="block text-xs font-bold text-[#e9edef] leading-tight">Gym Member</span>
-                          <span className="block text-[9px] text-[#00a884] leading-tight font-semibold">online</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-3 text-zinc-400 text-[10px] select-none">
-                        <span>📞</span>
-                        <span>⋮</span>
-                      </div>
+                  {/* WhatsApp Chat Preview */}
+                  <div className="space-y-3 flex flex-col items-center">
+                    <div className="flex items-center gap-1.5 self-start">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#00a884] animate-pulse" />
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">WhatsApp Message Preview</span>
                     </div>
 
-                    {/* Chat Area Mockup */}
-                    <div className="p-3.5 space-y-3 relative bg-[#0b141a] min-h-[220px] flex flex-col justify-end">
-                      {/* Background WhatsApp Doodle grid effect */}
-                      <div className="absolute inset-0 opacity-[0.06] bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none" />
-
-                      {/* Chat Message Bubble (Outgoing) */}
-                      <div className="relative self-end bg-[#005c4b] text-[#e9edef] p-3 rounded-lg rounded-tr-none max-w-[90%] shadow-md border border-[#005c4b] z-10 flex flex-col">
-                        {/* Header element */}
-                        {getComponentOf(selectedTemplate.components, 'HEADER')?.format === 'TEXT' && (
-                          <div className="font-bold text-white text-xs border-b border-[#00705a] pb-1 mb-1.5">
-                            {getComponentOf(selectedTemplate.components, 'HEADER')?.text}
-                          </div>
-                        )}
-                        {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(getComponentOf(selectedTemplate.components, 'HEADER')?.format || '') && (
-                          <div className="rounded-lg bg-black/20 border border-[#004f40] p-4 text-center text-[10px] text-zinc-300 flex flex-col items-center justify-center gap-1.5 mb-1.5">
-                            <Upload className="h-4 w-4 text-cyan-400" />
-                            <span className="font-bold">{getComponentOf(selectedTemplate.components, 'HEADER')?.format}</span>
-                            <span className="text-[8px] text-[#8696a0] truncate max-w-[150px]">
-                              {getComponentOf(selectedTemplate.components, 'HEADER')?.example?.local_originalname || 'draft-file'}
-                            </span>
-                          </div>
-                        )}
-
-                        {/* Body element */}
-                        <div className="whitespace-pre-wrap leading-relaxed text-xs break-words">
-                          {getComponentOf(selectedTemplate.components, 'BODY')?.text}
-                        </div>
-
-                        {/* Footer element */}
-                        {getComponentOf(selectedTemplate.components, 'FOOTER') && (
-                          <div className="text-[9px] text-[#e9edef]/60 mt-1 block">
-                            {getComponentOf(selectedTemplate.components, 'FOOTER')?.text}
-                          </div>
-                        )}
-
-                        {/* Timestamp & checkmarks */}
-                        <div className="self-end flex items-center gap-1 mt-1 text-[8px] text-[#e9edef]/60 leading-none">
-                          <span>12:34 PM</span>
-                          <span className="text-[#53bdeb]">✓✓</span>
-                        </div>
+                    {/* Smartphone Frame Mockup Wrapper */}
+                    <div className="relative mx-auto w-[290px] h-[520px] rounded-[38px] border-[10px] border-zinc-800 bg-[#0b141a] shadow-2xl overflow-hidden flex flex-col justify-between font-sans select-none ring-1 ring-zinc-700/50">
+                      {/* Speaker Notch / Dynamic Island */}
+                      <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-24 h-4.5 bg-zinc-850 rounded-full z-30 flex items-center justify-center border border-zinc-800/40">
+                        <div className="w-1.5 h-1.5 bg-zinc-900 rounded-full ml-1.5" />
+                        <div className="w-8 h-1 bg-zinc-800/60 rounded-full ml-3" />
                       </div>
 
-                      {/* Interactive Buttons listing underneath outgoing bubble */}
-                      {getComponentOf(selectedTemplate.components, 'BUTTONS') && (
-                        <div className="self-end w-full max-w-[90%] space-y-1.5 z-10">
-                          {getComponentOf(selectedTemplate.components, 'BUTTONS')?.buttons?.map((btn: any, idx: number) => (
-                            <div
-                              key={idx}
-                              className="w-full bg-[#202c33] hover:bg-[#2a3942] border border-[#2d3a42] rounded-lg py-1.5 px-3 text-[11px] text-[#53bdeb] font-bold text-center flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm"
-                            >
-                              {btn.type === 'URL' && <ExternalLink className="h-3 w-3" />}
-                              {btn.text}
+                      {/* Camera Lens Indicator */}
+                      <div className="absolute top-2.5 right-6 w-2 h-2 bg-zinc-900 rounded-full z-30" />
+
+                      {/* Screen Content Wrapper */}
+                      <div className="flex-1 flex flex-col justify-between overflow-hidden relative pt-7 pb-4">
+                        {/* WhatsApp Header Mockup */}
+                        <div className="bg-[#202c33] px-3.5 py-2.5 flex items-center justify-between border-b border-[#2d3a42] shrink-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-zinc-400 text-xs cursor-pointer select-none">←</span>
+                            <div className="w-6.5 h-6.5 rounded-full bg-cyan-600 flex items-center justify-center text-white font-extrabold text-[10px]">
+                              <FileText className="w-3.5 h-3.5 text-white" />
                             </div>
-                          ))}
+                            <div>
+                              <span className="block text-[10px] font-bold text-[#e9edef] leading-tight">Gym Member</span>
+                              <span className="block text-[8px] text-[#00a884] leading-tight font-semibold">online</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 text-zinc-400 text-[9px] select-none">
+                            <span>📞</span>
+                            <span>⋮</span>
+                          </div>
                         </div>
-                      )}
+
+                        {/* Chat Area Mockup */}
+                        <div className="flex-1 p-3.5 space-y-3 relative bg-[#0b141a] overflow-y-auto flex flex-col justify-end">
+                          {/* Background WhatsApp Doodle grid effect */}
+                          <div className="absolute inset-0 opacity-[0.05] bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:10px_10px] pointer-events-none" />
+
+                          {/* Chat Message Bubble (Outgoing) */}
+                          <div className="relative self-end bg-[#005c4b] text-[#e9edef] p-2.5 rounded-lg rounded-tr-none max-w-[90%] shadow-md border border-[#005c4b] z-10 flex flex-col text-[10px] leading-relaxed">
+                            {/* Header element */}
+                            {getComponentOf(selectedTemplate.components, 'HEADER')?.format === 'TEXT' && (
+                              <div className="font-bold text-white text-[10px] border-b border-[#00705a] pb-1 mb-1.5">
+                                {getComponentOf(selectedTemplate.components, 'HEADER')?.text}
+                              </div>
+                            )}
+                            {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(getComponentOf(selectedTemplate.components, 'HEADER')?.format || '') && (
+                              <div className="rounded-lg bg-black/20 border border-[#004f40] p-3 text-center text-[9px] text-zinc-300 flex flex-col items-center justify-center gap-1 mb-1">
+                                <Upload className="h-3.5 w-3.5 text-cyan-400" />
+                                <span className="font-bold">{getComponentOf(selectedTemplate.components, 'HEADER')?.format}</span>
+                                <span className="text-[7px] text-[#8696a0] truncate max-w-[120px]">
+                                  {getComponentOf(selectedTemplate.components, 'HEADER')?.example?.local_originalname || 'draft-file'}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Body element */}
+                            <div className="whitespace-pre-wrap leading-relaxed text-[10px] break-words">
+                              {getComponentOf(selectedTemplate.components, 'BODY')?.text}
+                            </div>
+
+                            {/* Footer element */}
+                            {getComponentOf(selectedTemplate.components, 'FOOTER') && (
+                              <div className="text-[8px] text-[#e9edef]/60 mt-1 block">
+                                {getComponentOf(selectedTemplate.components, 'FOOTER')?.text}
+                              </div>
+                            )}
+
+                            {/* Timestamp & checkmarks */}
+                            <div className="self-end flex items-center gap-1 mt-1 text-[7px] text-[#e9edef]/60 leading-none">
+                              <span>12:34 PM</span>
+                              <span className="text-[#53bdeb]">✓✓</span>
+                            </div>
+                          </div>
+
+                          {/* Interactive Buttons listing underneath outgoing bubble */}
+                          {getComponentOf(selectedTemplate.components, 'BUTTONS') && (
+                            <div className="self-end w-full max-w-[90%] space-y-1.5 z-10">
+                              {getComponentOf(selectedTemplate.components, 'BUTTONS')?.buttons?.map((btn: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="w-full bg-[#202c33] hover:bg-[#2a3942] border border-[#2d3a42] rounded-lg py-1.5 px-3 text-[10px] text-[#53bdeb] font-bold text-center flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm"
+                                >
+                                  {btn.type === 'URL' && <ExternalLink className="h-3 w-3" />}
+                                  {btn.text}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* iPhone Home Indicator bar at the bottom */}
+                      <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-24 h-1 bg-zinc-700/60 rounded-full z-30" />
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Drawer Footer Actions */}
-              <div className="border-t border-zinc-900/60 p-5 bg-[#0b0b0f]/60 backdrop-blur-md flex items-center justify-between gap-3 relative z-10">
-                <button
-                  onClick={() => setSelectedTemplate(null)}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-all duration-300 neon-btn-secondary"
-                >
-                  Close
-                </button>
+                {/* Drawer Footer Actions */}
+                <div className="border-t border-zinc-900/60 p-5 bg-[#0b0b0f]/60 backdrop-blur-md flex items-center justify-between gap-3 relative z-10">
+                  <button
+                    onClick={() => setSelectedTemplate(null)}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-all duration-300 neon-btn-secondary"
+                  >
+                    Close
+                  </button>
 
-                {selectedTemplate.status === 'draft' ? (
-                  <button
-                    onClick={() => {
-                      handleSubmitToMeta(selectedTemplate.id);
-                      setSelectedTemplate(null);
-                    }}
-                    disabled={!isConnected}
-                    className="w-full flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-all duration-300 neon-btn-primary disabled:opacity-50"
-                  >
-                    <Send className="h-3.5 w-3.5" /> Submit to Meta
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      handleSyncTemplateStatus(selectedTemplate.id);
-                      setSelectedTemplate(null);
-                    }}
-                    className="w-full flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-all duration-300 neon-btn-primary"
-                  >
-                    <RefreshCcw className="h-3.5 w-3.5" /> Sync Status
-                  </button>
-                )}
-              </div>
-            </motion.div>
+                  {selectedTemplate.status === 'draft' ? (
+                    <button
+                      onClick={() => {
+                        handleSubmitToMeta(selectedTemplate.id);
+                        setSelectedTemplate(null);
+                      }}
+                      disabled={!isConnected}
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-all duration-300 neon-btn-primary disabled:opacity-50"
+                    >
+                      <Send className="h-3.5 w-3.5" /> Submit to Meta
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        handleSyncTemplateStatus(selectedTemplate.id);
+                        setSelectedTemplate(null);
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold transition-all duration-300 neon-btn-primary"
+                    >
+                      <RefreshCcw className="h-3.5 w-3.5" /> Sync Status
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
@@ -1056,320 +1075,431 @@ export default function MessageTemplatesPage() {
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
             />
 
-            {/* Sliding drawer */}
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="fixed right-0 top-0 h-full w-full max-w-xl bg-zinc-950 border-l border-zinc-900 shadow-2xl z-50 flex flex-col justify-between"
-            >
-              {/* Drawer Header */}
-              <div className="flex items-center justify-between border-b border-zinc-900 p-5">
-                <div>
-                  <h3 className="font-extrabold text-sm text-white flex items-center gap-1.5 uppercase tracking-wide">
-                    <Sparkles className="h-4 w-4 text-cyan-400 animate-pulse" />
-                    Create Message Template
-                  </h3>
-                  <span className="text-[10px] text-zinc-500 mt-0.5 block">Define header, body, footers, and interactive action triggers.</span>
-                </div>
-                <button
-                  onClick={() => setIsCreateOpen(false)}
-                  className="rounded-lg p-1.5 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+            {/* Centered Modal Container */}
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="relative w-full max-w-4xl max-h-[90vh] bg-zinc-950 border border-zinc-900 shadow-2xl rounded-2xl flex flex-col justify-between overflow-hidden pointer-events-auto"
+              >
+                {/* Decorative glows */}
+                <div className="absolute -right-20 -top-20 h-48 w-48 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" />
+                <div className="absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-purple-500/10 blur-3xl pointer-events-none" />
 
-              {/* Drawer Scrollable Form Content */}
-              <form onSubmit={handleCreateDraft} className="flex-1 overflow-y-auto p-6 space-y-6 text-xs text-zinc-300">
-                {/* 1. Template Name */}
-                <div className="space-y-1.5">
-                  <label className="block font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
-                    Template Unique Name <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. welcome_member"
-                    value={formName}
-                    onChange={(e) => handleNameInput(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-850 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-650 focus:outline-none focus:border-cyan-500 font-mono tracking-tight"
-                  />
-                  <p className="text-[10px] text-zinc-500">
-                    Lower-case alphanumeric values and underscores only. Spaces and hyphens auto-converted.
-                  </p>
+                {/* Drawer Header */}
+                <div className="flex items-center justify-between border-b border-zinc-900 p-5 relative z-10 bg-zinc-950/40">
+                  <div>
+                    <h3 className="font-extrabold text-sm text-white flex items-center gap-1.5 uppercase tracking-wide">
+                      <Sparkles className="h-4 w-4 text-cyan-400 animate-pulse" />
+                      Create Message Template
+                    </h3>
+                    <span className="text-[10px] text-zinc-500 mt-0.5 block">Define header, body, footers, and interactive action triggers.</span>
+                  </div>
+                  <button
+                    onClick={() => setIsCreateOpen(false)}
+                    className="rounded-lg p-1.5 hover:bg-zinc-900 text-zinc-400 hover:text-white transition-all"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
 
-                {/* 2. Category & Language Grid */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* Drawer Scrollable Form Content & Live Preview Split */}
+                <form onSubmit={handleCreateDraft} className="flex-1 overflow-hidden flex flex-col md:flex-row text-xs text-zinc-300 relative z-10">
+                  {/* Left Column: Form Fields (scrollable) */}
+                  <div className="flex-1 overflow-y-auto p-6 space-y-6 border-r border-zinc-900/60">
+                  {/* 1. Template Name */}
                   <div className="space-y-1.5">
                     <label className="block font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
-                      Meta Category
+                      Template Unique Name <span className="text-rose-500">*</span>
                     </label>
-                    <select
-                      value={formCategory}
-                      onChange={(e) => setFormCategory(e.target.value)}
-                      className="w-full rounded-xl border border-zinc-850 bg-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-cyan-500 cursor-pointer"
-                    >
-                      <option value="UTILITY">Utility (Reminders, Alert)</option>
-                      <option value="MARKETING">Marketing (Offer, News)</option>
-                      <option value="AUTHENTICATION">Authentication (OTP)</option>
-                    </select>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. welcome_member"
+                      value={formName}
+                      onChange={(e) => handleNameInput(e.target.value)}
+                      className="w-full rounded-xl border border-zinc-850 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-650 focus:outline-none focus:border-cyan-500 font-mono tracking-tight"
+                    />
+                    <p className="text-[10px] text-zinc-500">
+                      Lower-case alphanumeric values and underscores only. Spaces and hyphens auto-converted.
+                    </p>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className="block font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
-                      Language Code
-                    </label>
-                    <select
-                      value={formLanguage}
-                      onChange={(e) => setFormLanguage(e.target.value)}
-                      className="w-full rounded-xl border border-zinc-850 bg-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-cyan-500 cursor-pointer"
-                    >
-                      <option value="en_US">English (US) - en_US</option>
-                      <option value="en_GB">English (UK) - en_GB</option>
-                      <option value="hi">Hindi - hi</option>
-                      <option value="es">Spanish - es</option>
-                      <option value="fr">French - fr</option>
-                      <option value="pt_BR">Portuguese (BR) - pt_BR</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="h-px bg-zinc-900 my-4" />
-
-                {/* 3. Header Setup Block */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="block font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
-                      Template Header Type
-                    </label>
-                    <span className="text-[10px] text-zinc-500">Optional text/media</span>
-                  </div>
-
-                  <div className="grid grid-cols-5 gap-2">
-                    {(['NONE', 'TEXT', 'IMAGE', 'VIDEO', 'DOCUMENT'] as const).map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => {
-                          setFormHeaderType(type);
-                          setFormHeaderFile(null);
-                        }}
-                        className={`rounded-lg border py-2 font-bold text-[9px] uppercase tracking-wider text-center transition-all ${formHeaderType === type
-                            ? 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
-                            : 'border-zinc-850 bg-zinc-900/30 hover:bg-zinc-900 text-zinc-400 hover:text-zinc-300'
-                          }`}
+                  {/* 2. Category & Language Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="block font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
+                        Meta Category
+                      </label>
+                      <select
+                        value={formCategory}
+                        onChange={(e) => setFormCategory(e.target.value)}
+                        className="w-full rounded-xl border border-zinc-850 bg-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-cyan-500 cursor-pointer"
                       >
-                        {type}
-                      </button>
-                    ))}
+                        <option value="UTILITY">Utility (Reminders, Alert)</option>
+                        <option value="MARKETING">Marketing (Offer, News)</option>
+                        <option value="AUTHENTICATION">Authentication (OTP)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="block font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
+                        Language Code
+                      </label>
+                      <select
+                        value={formLanguage}
+                        onChange={(e) => setFormLanguage(e.target.value)}
+                        className="w-full rounded-xl border border-zinc-850 bg-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-cyan-500 cursor-pointer"
+                      >
+                        <option value="en_US">English (US) - en_US</option>
+                        <option value="en_GB">English (UK) - en_GB</option>
+                        <option value="hi">Hindi - hi</option>
+                        <option value="es">Spanish - es</option>
+                        <option value="fr">French - fr</option>
+                        <option value="pt_BR">Portuguese (BR) - pt_BR</option>
+                      </select>
+                    </div>
                   </div>
 
-                  {/* Header Input Text conditional rendering */}
-                  {formHeaderType === 'TEXT' && (
-                    <div className="space-y-1.5 pt-1">
-                      <input
-                        type="text"
-                        placeholder="Enter template header text..."
-                        value={formHeaderText}
-                        onChange={(e) => setFormHeaderText(e.target.value)}
-                        maxLength={60}
-                        className="w-full rounded-xl border border-zinc-850 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500"
-                      />
-                    </div>
-                  )}
+                  <div className="h-px bg-zinc-900 my-4" />
 
-                  {/* Header File upload field conditional rendering */}
-                  {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(formHeaderType) && (
-                    <div className="space-y-2 pt-1">
-                      <div className="rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20 p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-zinc-700 transition-all relative">
-                        <input
-                          type="file"
-                          required
-                          onChange={(e) => {
-                            if (e.target.files && e.target.files.length > 0) {
-                              setFormHeaderFile(e.target.files[0]);
-                            }
+                  {/* 3. Header Setup Block */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
+                        Template Header Type
+                      </label>
+                      <span className="text-[10px] text-zinc-500">Optional text/media</span>
+                    </div>
+
+                    <div className="grid grid-cols-5 gap-2">
+                      {(['NONE', 'TEXT', 'IMAGE', 'VIDEO', 'DOCUMENT'] as const).map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => {
+                            setFormHeaderType(type);
+                            setFormHeaderFile(null);
                           }}
-                          accept={
-                            formHeaderType === 'IMAGE'
-                              ? 'image/*'
-                              : formHeaderType === 'VIDEO'
-                                ? 'video/*'
-                                : 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                          }
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                        />
-                        <Upload className="h-5 w-5 text-cyan-400" />
-                        <span className="text-[10px] font-bold text-zinc-400">
-                          {formHeaderFile ? formHeaderFile.name : `Select ${formHeaderType} file`}
-                        </span>
-                        <span className="text-[9px] text-zinc-500">
-                          {formHeaderFile ? `(${(formHeaderFile.size / 1024 / 1024).toFixed(2)} MB)` : 'S3-free local upload cache'}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 4. Body Content */}
-                <div className="space-y-2">
-                  <label className="block font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
-                    Template Body Content <span className="text-rose-500">*</span>
-                  </label>
-                  <textarea
-                    required
-                    rows={5}
-                    placeholder="Enter main message body...&#10;e.g. Hello {{1}}, your membership at {{2}} is active!"
-                    value={formBody}
-                    onChange={(e) => setFormBody(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-850 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500 leading-relaxed font-sans"
-                  />
-                  <div className="flex items-start gap-1 text-[10px] text-zinc-500">
-                    <Info className="h-3.5 w-3.5 text-cyan-500 shrink-0 mt-0.5" />
-                    <span>
-                      Add variables inside double braces like <code className="bg-zinc-800 px-1 py-0.5 rounded text-zinc-300">{"{{1}}"}</code> or <code className="bg-zinc-800 px-1 py-0.5 rounded text-zinc-300">{"{{2}}"}</code> to map member names, timings, or dates dynamically.
-                    </span>
-                  </div>
-                </div>
-
-                {/* 5. Footer Content */}
-                <div className="space-y-1.5">
-                  <label className="block font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
-                    Template Footer (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Reply STOP to opt-out"
-                    value={formFooter}
-                    onChange={(e) => setFormFooter(e.target.value)}
-                    maxLength={60}
-                    className="w-full rounded-xl border border-zinc-850 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-650 focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-
-                <div className="h-px bg-zinc-900 my-4" />
-
-                {/* 6. Buttons Interactive editor */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <label className="block font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
-                      Template Buttons (Optional)
-                    </label>
-                    <button
-                      type="button"
-                      onClick={handleAddButton}
-                      className="rounded bg-zinc-900 hover:bg-zinc-850 px-2.5 py-1 text-[10px] font-bold text-cyan-400 transition-all border border-zinc-850"
-                    >
-                      + Add Button
-                    </button>
-                  </div>
-
-                  {formButtons.length > 0 ? (
-                    <div className="space-y-3">
-                      {formButtons.map((btn, idx) => (
-                        <div
-                          key={btn.id}
-                          className="rounded-xl border border-zinc-900 bg-zinc-900/10 p-3.5 space-y-3 text-xs"
+                          className={`rounded-lg border py-2 font-bold text-[9px] uppercase tracking-wider text-center transition-all ${formHeaderType === type
+                              ? 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
+                              : 'border-zinc-850 bg-zinc-900/30 hover:bg-zinc-900 text-zinc-400 hover:text-zinc-300'
+                            }`}
                         >
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="font-extrabold text-[10px] text-zinc-500 uppercase tracking-wider">
-                              Button #{idx + 1}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveButton(btn.id)}
-                              className="text-[10px] font-bold text-rose-400 hover:underline flex items-center gap-0.5"
-                            >
-                              Remove
-                            </button>
-                          </div>
-
-                          <div className="grid grid-cols-3 gap-3">
-                            <div>
-                              <label className="block font-bold text-zinc-500 uppercase tracking-widest text-[8px] mb-1">
-                                Action Type
-                              </label>
-                              <select
-                                value={btn.type}
-                                onChange={(e) => handleUpdateButton(btn.id, 'type', e.target.value as any)}
-                                className="w-full rounded-lg border border-zinc-850 bg-zinc-900 px-2 py-1.5 text-[10px] text-white focus:outline-none focus:border-cyan-500 cursor-pointer"
-                              >
-                                <option value="QUICK_REPLY">Quick Reply</option>
-                                <option value="URL">Visit URL</option>
-                                <option value="PHONE_NUMBER">Call Number</option>
-                              </select>
-                            </div>
-
-                            <div className={btn.type === 'QUICK_REPLY' ? 'col-span-2' : 'col-span-1'}>
-                              <label className="block font-bold text-zinc-500 uppercase tracking-widest text-[8px] mb-1">
-                                Button Text
-                              </label>
-                              <input
-                                type="text"
-                                required
-                                maxLength={25}
-                                placeholder="Button Label"
-                                value={btn.text}
-                                onChange={(e) => handleUpdateButton(btn.id, 'text', e.target.value)}
-                                className="w-full rounded-lg border border-zinc-850 bg-zinc-900 px-2 py-1.5 text-[10px] text-white focus:outline-none focus:border-cyan-500"
-                              />
-                            </div>
-
-                            {btn.type !== 'QUICK_REPLY' && (
-                              <div className="col-span-1">
-                                <label className="block font-bold text-zinc-500 uppercase tracking-widest text-[8px] mb-1">
-                                  {btn.type === 'URL' ? 'URL Link' : 'Phone Number'}
-                                </label>
-                                <input
-                                  type={btn.type === 'URL' ? 'url' : 'tel'}
-                                  required
-                                  placeholder={btn.type === 'URL' ? 'https://example.com' : '+155500000'}
-                                  value={btn.value}
-                                  onChange={(e) => handleUpdateButton(btn.id, 'value', e.target.value)}
-                                  className="w-full rounded-lg border border-zinc-850 bg-zinc-900 px-2.5 py-1.5 text-[10px] text-white focus:outline-none focus:border-cyan-500 font-mono"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                          {type}
+                        </button>
                       ))}
                     </div>
-                  ) : (
-                    <p className="text-[10px] text-zinc-600 italic py-2">
-                      No buttons added yet. You can attach up to 10 interactive reply, website, or call links.
-                    </p>
-                  )}
+
+                    {/* Header Input Text conditional rendering */}
+                    {formHeaderType === 'TEXT' && (
+                      <div className="space-y-1.5 pt-1">
+                        <input
+                          type="text"
+                          placeholder="Enter template header text..."
+                          value={formHeaderText}
+                          onChange={(e) => setFormHeaderText(e.target.value)}
+                          maxLength={60}
+                          className="w-full rounded-xl border border-zinc-850 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500"
+                        />
+                      </div>
+                    )}
+
+                    {/* Header File upload field conditional rendering */}
+                    {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(formHeaderType) && (
+                      <div className="space-y-2 pt-1">
+                        <div className="rounded-xl border border-dashed border-zinc-800 bg-zinc-900/20 p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-zinc-700 transition-all relative">
+                          <input
+                            type="file"
+                            required
+                            onChange={(e) => {
+                              if (e.target.files && e.target.files.length > 0) {
+                                setFormHeaderFile(e.target.files[0]);
+                              }
+                            }}
+                            accept={
+                              formHeaderType === 'IMAGE'
+                                ? 'image/*'
+                                : formHeaderType === 'VIDEO'
+                                  ? 'video/*'
+                                  : 'application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                            }
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                          <Upload className="h-5 w-5 text-cyan-400" />
+                          <span className="text-[10px] font-bold text-zinc-400">
+                            {formHeaderFile ? formHeaderFile.name : `Select ${formHeaderType} file`}
+                          </span>
+                          <span className="text-[9px] text-zinc-500">
+                            {formHeaderFile ? `(${(formHeaderFile.size / 1024 / 1024).toFixed(2)} MB)` : 'S3-free local upload cache'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 4. Body Content */}
+                  <div className="space-y-2">
+                    <label className="block font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
+                      Template Body Content <span className="text-rose-500">*</span>
+                    </label>
+                    <textarea
+                      required
+                      rows={5}
+                      placeholder="Enter main message body...&#10;e.g. Hello {{1}}, your membership at {{2}} is active!"
+                      value={formBody}
+                      onChange={(e) => setFormBody(e.target.value)}
+                      className="w-full rounded-xl border border-zinc-850 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-cyan-500 leading-relaxed font-sans"
+                    />
+                    <div className="flex items-start gap-1 text-[10px] text-zinc-500">
+                      <Info className="h-3.5 w-3.5 text-cyan-500 shrink-0 mt-0.5" />
+                      <span>
+                        Add variables inside double braces like <code className="bg-zinc-800 px-1 py-0.5 rounded text-zinc-300">{"{{1}}"}</code> or <code className="bg-zinc-800 px-1 py-0.5 rounded text-zinc-300">{"{{2}}"}</code> to map member names, timings, or dates dynamically.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 5. Footer Content */}
+                  <div className="space-y-1.5">
+                    <label className="block font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
+                      Template Footer (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Reply STOP to opt-out"
+                      value={formFooter}
+                      onChange={(e) => setFormFooter(e.target.value)}
+                      maxLength={60}
+                      className="w-full rounded-xl border border-zinc-850 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-650 focus:outline-none focus:border-cyan-500"
+                    />
+                  </div>
+
+                  <div className="h-px bg-zinc-900 my-4" />
+
+                  {/* 6. Buttons Interactive editor */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="block font-bold text-zinc-400 uppercase tracking-widest text-[9px]">
+                        Template Buttons (Optional)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleAddButton}
+                        className="rounded bg-zinc-900 hover:bg-zinc-850 px-2.5 py-1 text-[10px] font-bold text-cyan-400 transition-all border border-zinc-850"
+                      >
+                        + Add Button
+                      </button>
+                    </div>
+
+                    {formButtons.length > 0 ? (
+                      <div className="space-y-3">
+                        {formButtons.map((btn, idx) => (
+                          <div
+                            key={btn.id}
+                            className="rounded-xl border border-zinc-900 bg-zinc-900/10 p-3.5 space-y-3 text-xs"
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="font-extrabold text-[10px] text-zinc-500 uppercase tracking-wider">
+                                Button #{idx + 1}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveButton(btn.id)}
+                                className="text-[10px] font-bold text-rose-400 hover:underline flex items-center gap-0.5"
+                              >
+                                Remove
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-3">
+                              <div>
+                                <label className="block font-bold text-zinc-500 uppercase tracking-widest text-[8px] mb-1">
+                                  Action Type
+                                </label>
+                                <select
+                                  value={btn.type}
+                                  onChange={(e) => handleUpdateButton(btn.id, 'type', e.target.value as any)}
+                                  className="w-full rounded-lg border border-zinc-850 bg-zinc-900 px-2 py-1.5 text-[10px] text-white focus:outline-none focus:border-cyan-500 cursor-pointer"
+                                >
+                                  <option value="QUICK_REPLY">Quick Reply</option>
+                                  <option value="URL">Visit URL</option>
+                                  <option value="PHONE_NUMBER">Call Number</option>
+                                </select>
+                              </div>
+
+                              <div className={btn.type === 'QUICK_REPLY' ? 'col-span-2' : 'col-span-1'}>
+                                <label className="block font-bold text-zinc-500 uppercase tracking-widest text-[8px] mb-1">
+                                  Button Text
+                                </label>
+                                <input
+                                  type="text"
+                                  required
+                                  maxLength={25}
+                                  placeholder="Button Label"
+                                  value={btn.text}
+                                  onChange={(e) => handleUpdateButton(btn.id, 'text', e.target.value)}
+                                  className="w-full rounded-lg border border-zinc-850 bg-zinc-900 px-2 py-1.5 text-[10px] text-white focus:outline-none focus:border-cyan-500"
+                                />
+                              </div>
+
+                              {btn.type !== 'QUICK_REPLY' && (
+                                <div className="col-span-1">
+                                  <label className="block font-bold text-zinc-500 uppercase tracking-widest text-[8px] mb-1">
+                                    {btn.type === 'URL' ? 'URL Link' : 'Phone Number'}
+                                  </label>
+                                  <input
+                                    type={btn.type === 'URL' ? 'url' : 'tel'}
+                                    required
+                                    placeholder={btn.type === 'URL' ? 'https://example.com' : '+155500000'}
+                                    value={btn.value}
+                                    onChange={(e) => handleUpdateButton(btn.id, 'value', e.target.value)}
+                                    className="w-full rounded-lg border border-zinc-850 bg-zinc-900 px-2.5 py-1.5 text-[10px] text-white focus:outline-none focus:border-cyan-500 font-mono"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-zinc-600 italic py-2">
+                        No buttons added yet. You can attach up to 10 interactive reply, website, or call links.
+                      </p>
+                    )}
+                  </div>
+                  </div>
+
+                  {/* Right Column: Live Smartphone Preview */}
+                  <div className="w-full md:w-[340px] shrink-0 bg-zinc-950/20 p-6 flex flex-col items-center justify-center overflow-y-auto border-l border-zinc-900/60">
+                    <div className="flex items-center gap-1.5 self-start mb-4">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#00a884] animate-pulse" />
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Live WhatsApp Preview</span>
+                    </div>
+
+                    {/* Smartphone Frame Mockup Wrapper */}
+                    <div className="relative mx-auto w-[270px] h-[480px] rounded-[38px] border-[10px] border-zinc-800 bg-[#0b141a] shadow-2xl overflow-hidden flex flex-col justify-between font-sans select-none ring-1 ring-zinc-700/50">
+                      {/* Speaker Notch / Dynamic Island */}
+                      <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-24 h-4.5 bg-zinc-850 rounded-full z-30 flex items-center justify-center border border-zinc-800/40">
+                        <div className="w-1.5 h-1.5 bg-zinc-900 rounded-full ml-1.5" />
+                        <div className="w-8 h-1 bg-zinc-800/60 rounded-full ml-3" />
+                      </div>
+
+                      {/* Camera Lens Indicator */}
+                      <div className="absolute top-2.5 right-6 w-2 h-2 bg-zinc-900 rounded-full z-30" />
+
+                      {/* Screen Content Wrapper */}
+                      <div className="flex-1 flex flex-col justify-between overflow-hidden relative pt-7 pb-4">
+                        {/* WhatsApp Header Mockup */}
+                        <div className="bg-[#202c33] px-3.5 py-2.5 flex items-center justify-between border-b border-[#2d3a42] shrink-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-zinc-400 text-xs cursor-pointer select-none">←</span>
+                            <div className="w-6.5 h-6.5 rounded-full bg-cyan-600 flex items-center justify-center text-white font-extrabold text-[10px]">
+                              <FileText className="w-3.5 h-3.5 text-white" />
+                            </div>
+                            <div>
+                              <span className="block text-[10px] font-bold text-[#e9edef] leading-tight">Gym Member</span>
+                              <span className="block text-[8px] text-[#00a884] leading-tight font-semibold">online</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 text-zinc-400 text-[9px] select-none">
+                            <span>📞</span>
+                            <span>⋮</span>
+                          </div>
+                        </div>
+
+                        {/* Chat Area Mockup */}
+                        <div className="flex-1 p-3.5 space-y-3 relative bg-[#0b141a] overflow-y-auto flex flex-col justify-end font-sans">
+                          {/* Background WhatsApp Doodle grid effect */}
+                          <div className="absolute inset-0 opacity-[0.05] bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:10px_10px] pointer-events-none" />
+
+                          {/* Chat Message Bubble (Outgoing) */}
+                          <div className="relative self-end bg-[#005c4b] text-[#e9edef] p-2.5 rounded-lg rounded-tr-none max-w-[90%] shadow-md border border-[#005c4b] z-10 flex flex-col text-[10px] leading-relaxed">
+                            {/* Header element */}
+                            {formHeaderType === 'TEXT' && formHeaderText && (
+                              <div className="font-bold text-white text-[10px] border-b border-[#00705a] pb-1 mb-1.5">
+                                {formHeaderText}
+                              </div>
+                            )}
+                            {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(formHeaderType) && (
+                              <div className="rounded-lg bg-black/20 border border-[#004f40] p-3 text-center text-[9px] text-zinc-300 flex flex-col items-center justify-center gap-1 mb-1">
+                                <Upload className="h-3.5 w-3.5 text-cyan-400" />
+                                <span className="font-bold">{formHeaderType}</span>
+                                <span className="text-[7px] text-[#8696a0] truncate max-w-[120px]">
+                                  {formHeaderFile ? formHeaderFile.name : `Select ${formHeaderType.toLowerCase()} file`}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Body element */}
+                            <div className="whitespace-pre-wrap leading-relaxed text-[10px] break-words">
+                              {formBody || 'Enter template body content...'}
+                            </div>
+
+                            {/* Footer element */}
+                            {formFooter && (
+                              <div className="text-[8px] text-[#e9edef]/60 mt-1 block">
+                                {formFooter}
+                              </div>
+                            )}
+
+                            {/* Timestamp & checkmarks */}
+                            <div className="self-end flex items-center gap-1 mt-1 text-[7px] text-[#e9edef]/60 leading-none">
+                              <span>12:34 PM</span>
+                              <span className="text-[#53bdeb]">✓✓</span>
+                            </div>
+                          </div>
+
+                          {/* Interactive Buttons listing underneath outgoing bubble */}
+                          {formButtons.length > 0 && (
+                            <div className="self-end w-full max-w-[90%] space-y-1.5 z-10">
+                              {formButtons.map((btn) => (
+                                <div
+                                  key={btn.id}
+                                  className="w-full bg-[#202c33] hover:bg-[#2a3942] border border-[#2d3a42] rounded-lg py-1.5 px-3 text-[10px] text-[#53bdeb] font-bold text-center flex items-center justify-center gap-1.5 cursor-pointer transition-all shadow-sm font-sans"
+                                >
+                                  {btn.type === 'URL' && <ExternalLink className="h-3 w-3" />}
+                                  {btn.text || 'Button Label'}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* iPhone Home Indicator bar at the bottom */}
+                      <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-24 h-1 bg-zinc-700/60 rounded-full z-30" />
+                    </div>
+                  </div>
+
+                  {/* Invisible Form submit trigger */}
+                  <button type="submit" className="hidden" id="submit-draft-btn" />
+                </form>
+
+                {/* Drawer Footer Actions */}
+                <div className="border-t border-zinc-900 p-5 bg-zinc-950/60 flex items-center justify-between gap-3 shrink-0 relative z-10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetForm();
+                      setIsCreateOpen(false);
+                    }}
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 text-xs font-bold text-zinc-400 hover:text-white transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('submit-draft-btn')?.click()}
+                    disabled={isSavingDraft}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-cyan-600 py-3 text-xs font-bold text-white transition-all hover:bg-cyan-500 disabled:opacity-50"
+                  >
+                    {isSavingDraft ? 'Submitting...' : 'Submit to Meta'}
+                  </button>
                 </div>
-
-                {/* Invisible Form submit trigger */}
-                <button type="submit" className="hidden" id="submit-draft-btn" />
-              </form>
-
-              {/* Drawer Footer Actions */}
-              <div className="border-t border-zinc-900 p-5 bg-zinc-950/60 flex items-center justify-between gap-3 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => {
-                    resetForm();
-                    setIsCreateOpen(false);
-                  }}
-                  className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-3 text-xs font-bold text-zinc-400 hover:text-white transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => document.getElementById('submit-draft-btn')?.click()}
-                  disabled={isSavingDraft}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-cyan-600 py-3 text-xs font-bold text-white transition-all hover:bg-cyan-500 disabled:opacity-50"
-                >
-                  {isSavingDraft ? 'Saving Draft...' : 'Save as Draft'}
-                </button>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>

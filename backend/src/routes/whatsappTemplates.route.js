@@ -69,7 +69,7 @@ router.post("/", upload.single("headerFile"), async (req, res) => {
   const { gymSlug } = req.params;
   const { name, category, language, body, footer, buttons } = req.body;
 
-  console.log(`🔌 [Templates POST] Creating local draft template "${name}" for Gym: "${gymSlug}"`);
+  console.log(`🔌 [Templates POST] Submitting template "${name}" for Gym: "${gymSlug}"`);
 
   if (!name || !category || !language || !body) {
     return res.status(400).json({ error: "Missing required fields (name, category, language, body)" });
@@ -83,6 +83,7 @@ router.post("/", upload.single("headerFile"), async (req, res) => {
     });
   }
 
+  let template = null;
   try {
     const gym = await prisma.gym.findUnique({
       where: { slug: gymSlug.toLowerCase() },
@@ -90,6 +91,15 @@ router.post("/", upload.single("headerFile"), async (req, res) => {
 
     if (!gym) {
       return res.status(404).json({ error: "Gym not found" });
+    }
+
+    if (!gym.whatsapp_access_token || !gym.whatsapp_business_id) {
+      // Clean up uploaded file if present
+      if (req.file) {
+        const filePath = path.join(uploadDir, req.file.filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
+      return res.status(400).json({ error: "WhatsApp credentials or business setup missing. Cannot submit template." });
     }
 
     // Check unique name constraints
@@ -103,6 +113,11 @@ router.post("/", upload.single("headerFile"), async (req, res) => {
     });
 
     if (existing) {
+      // Clean up uploaded file if present
+      if (req.file) {
+        const filePath = path.join(uploadDir, req.file.filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
       return res.status(400).json({ error: `A template named "${name}" already exists.` });
     }
 
@@ -184,8 +199,8 @@ router.post("/", upload.single("headerFile"), async (req, res) => {
       });
     }
 
-    // Save in DB
-    const template = await prisma.whatsAppTemplate.create({
+    // Save locally as draft first in DB
+    template = await prisma.whatsAppTemplate.create({
       data: {
         gymId: gym.id,
         templateName: name,
@@ -196,11 +211,177 @@ router.post("/", upload.single("headerFile"), async (req, res) => {
       },
     });
 
-    console.log(`✅ [Templates POST] Created template draft: ${template.id}`);
-    res.json(template);
+    console.log(`✅ [Templates POST] Created template draft locally: ${template.id}`);
+
+    // Submit to Meta
+    const accessToken = decrypt(gym.whatsapp_access_token);
+    const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
+
+    if (!appId) {
+      // Cleanup local template draft
+      await prisma.whatsAppTemplate.delete({ where: { id: template.id } });
+      if (req.file) {
+        const filePath = path.join(uploadDir, req.file.filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
+      return res.status(500).json({ error: "Facebook App ID configuration missing on server." });
+    }
+
+    // Build the Meta Payload components list
+    const metaComponents = [];
+    for (const comp of components) {
+      if (comp.type === "HEADER") {
+        if (comp.format === "TEXT") {
+          metaComponents.push({
+            type: "HEADER",
+            format: "TEXT",
+            text: comp.text,
+          });
+        } else if (["IMAGE", "VIDEO", "DOCUMENT"].includes(comp.format)) {
+          const fileInfo = comp.example;
+          if (!fileInfo || !fileInfo.local_filename) {
+            throw new Error(`Media header configuration missing local file reference.`);
+          }
+
+          const filePath = path.join(uploadDir, fileInfo.local_filename);
+          if (!fs.existsSync(filePath)) {
+            throw new Error(`Local file reference ${fileInfo.local_filename} not found on disk.`);
+          }
+
+          const fileBuffer = fs.readFileSync(filePath);
+
+          console.log(`🔌 [Templates POST] Uploading media header file to Meta...`);
+          const handle = await uploadTemplateMediaToMeta({
+            accessToken,
+            appId,
+            buffer: fileBuffer,
+            mimeType: fileInfo.local_mimetype || "image/jpeg",
+            fileName: fileInfo.local_originalname || "header-file",
+          });
+
+          metaComponents.push({
+            type: "HEADER",
+            format: comp.format,
+            example: {
+              header_handle: [handle],
+            },
+          });
+        }
+      } else if (comp.type === "BODY") {
+        const variables = comp.text.match(/{{\d+}}/g) || [];
+        const bodyComp = {
+          type: "BODY",
+          text: comp.text,
+        };
+
+        if (variables.length > 0) {
+          bodyComp.example = {
+            body_text: [variables.map((_, idx) => `Sample${idx + 1}`)],
+          };
+        }
+        metaComponents.push(bodyComp);
+      } else if (comp.type === "FOOTER") {
+        metaComponents.push({
+          type: "FOOTER",
+          text: comp.text,
+        });
+      } else if (comp.type === "BUTTONS") {
+        metaComponents.push({
+          type: "BUTTONS",
+          buttons: comp.buttons.map((btn) => {
+            if (btn.type === "URL") {
+              const hasVariable = btn.url.includes("{{1}}");
+              return {
+                type: "URL",
+                text: btn.text,
+                url: btn.url,
+                ...(hasVariable && { example: ["TRACK123"] }),
+              };
+            }
+            if (btn.type === "PHONE_NUMBER") {
+              return {
+                type: "PHONE_NUMBER",
+                text: btn.text,
+                phone_number: btn.phone_number,
+              };
+            }
+            return {
+              type: "QUICK_REPLY",
+              text: btn.text,
+            };
+          }),
+        });
+      }
+    }
+
+    const payload = {
+      name: template.templateName,
+      category: template.category,
+      language: template.language,
+      components: metaComponents,
+    };
+
+    console.log(`🔌 [Templates POST] Sending request to Meta Graph API...`);
+    const submitRes = await fetch(
+      `${GRAPH_BASE_URL}/${META_API_VERSION}/${gym.whatsapp_business_id}/message_templates`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    const submitData = await submitRes.json();
+
+    if (!submitRes.ok) {
+      console.error("❌ [Templates POST] Meta rejection response:", submitData);
+      // Clean up local template draft
+      await prisma.whatsAppTemplate.delete({ where: { id: template.id } });
+      if (req.file) {
+        const filePath = path.join(uploadDir, req.file.filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
+      return res.status(400).json({
+        error: submitData?.error?.message || "Meta Template submission rejected",
+        details: submitData,
+      });
+    }
+
+    console.log(`✅ [Templates POST] Meta response succeeded. ID: ${submitData.id}`);
+
+    // Update status to pending and store Meta ID
+    const updated = await prisma.whatsAppTemplate.update({
+      where: { id: template.id },
+      data: {
+        status: "PENDING",
+        metaTemplateId: submitData.id,
+      },
+    });
+
+    res.json(updated);
   } catch (err) {
-    console.error("❌ [Templates POST] Error:", err);
-    res.status(500).json({ error: err.message || "Failed to create template" });
+    console.error("❌ [Templates POST] Error during submission:", err);
+    // Cleanup template draft if it was created
+    if (template && template.id) {
+      try {
+        await prisma.whatsAppTemplate.delete({ where: { id: template.id } });
+      } catch (dbErr) {
+        console.error("❌ Failed to cleanup database draft:", dbErr);
+      }
+    }
+    // Cleanup uploaded header file if it was created
+    if (req.file) {
+      try {
+        const filePath = path.join(uploadDir, req.file.filename);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      } catch (fileErr) {
+        console.error("❌ Failed to cleanup uploaded header file:", fileErr);
+      }
+    }
+    res.status(500).json({ error: err.message || "Failed to submit template to Meta" });
   }
 });
 

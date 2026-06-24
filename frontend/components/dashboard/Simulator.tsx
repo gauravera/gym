@@ -130,6 +130,12 @@ export default function Simulator({ gymId, gymSlug }: SimulatorProps) {
     e.preventDefault();
     if (!newMemberName.trim() || !newMemberPhone.trim()) return;
 
+    const phoneRegex = /^\+?[0-9]+$/;
+    if (!phoneRegex.test(newMemberPhone)) {
+      alert('WhatsApp Phone Number must contain only numbers (optionally starting with +).');
+      return;
+    }
+
     try {
       const res = await fetch(`/api/dashboard/${gymSlug}/members`, {
         method: 'POST',
@@ -214,7 +220,13 @@ export default function Simulator({ gymId, gymSlug }: SimulatorProps) {
                 type="text"
                 placeholder="WhatsApp Number (e.g. +919988776655)"
                 value={newMemberPhone}
-                onChange={(e) => setNewMemberPhone(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const cleaned = val.replace(/[^\d+]/g, '');
+                  const hasPlus = cleaned.startsWith('+');
+                  const digits = cleaned.replace(/\+/g, '');
+                  setNewMemberPhone((hasPlus ? '+' : '') + digits);
+                }}
                 required
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
               />
