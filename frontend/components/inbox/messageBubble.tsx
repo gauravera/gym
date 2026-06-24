@@ -236,7 +236,9 @@ export default function MessageBubble({
         className={`text-[10px] lowercase leading-none ${
           isOverlay
             ? "text-white drop-shadow-sm font-medium"
-            : "text-zinc-500"
+            : msg.sender === "executive"
+              ? "text-bubble-outbound-meta"
+              : "text-bubble-inbound-meta"
         }`}
       >
         {formattedTime}
@@ -248,7 +250,7 @@ export default function MessageBubble({
               ? "text-cyan-400"
               : isOverlay
                 ? "text-white drop-shadow-sm"
-                : "text-zinc-500"
+                : "text-bubble-outbound-meta"
           }
         >
           {getMessageStatusIcon(msg.status)}
@@ -285,11 +287,11 @@ export default function MessageBubble({
         `}
       >
         <div
-          className={`group relative shadow-none overflow-hidden flex flex-col p-0
+          className={`group relative shadow-sm overflow-hidden flex flex-col p-0
           ${
             msg.sender === "executive"
-              ? "bg-cyan-900/90 text-white rounded-tr-none rounded-2xl rounded-br-2xl"
-              : "bg-zinc-900 text-zinc-100 rounded-tl-none rounded-2xl rounded-bl-2xl border border-zinc-850"
+              ? "bg-bubble-outbound-bg text-bubble-outbound-text rounded-tr-none rounded-2xl rounded-br-2xl"
+              : "bg-bubble-inbound-bg text-bubble-inbound-text rounded-tl-none rounded-2xl rounded-bl-2xl border border-zinc-200/50 dark:border-zinc-800/50"
           }
           max-w-full`}
         >
@@ -437,7 +439,7 @@ export default function MessageBubble({
             )}
 
             {isDocument && effectiveMediaUrl && (
-              <div className="relative flex items-center gap-3 px-3 py-3 bg-zinc-850 rounded-lg pb-5 m-1">
+              <div className="relative flex items-center gap-3 px-3 py-3 bg-black/5 dark:bg-black/25 rounded-lg pb-5 m-1">
                 <div className="shrink-0 w-12 h-12 rounded-lg bg-cyan-600/10 flex items-center justify-center">
                   <svg
                     width="24"
@@ -453,10 +455,10 @@ export default function MessageBubble({
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate text-zinc-100">
+                  <p className="text-sm font-medium truncate">
                     {effectiveCaption || "Document"}
                   </p>
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-xs opacity-70">
                     {effectiveMimeType?.split("/")[1]?.toUpperCase() || "FILE"} • Tap to view
                   </p>
                 </div>
@@ -511,7 +513,7 @@ export default function MessageBubble({
 
             {/* TEXT CONTENT */}
             {cleanText && !isImage && !isVideo && (
-              <div className="px-2 py-0.5 text-sm break-words whitespace-pre-wrap text-zinc-100">
+              <div className="px-2 py-0.5 text-sm break-words whitespace-pre-wrap">
                 {cleanText}
                 {!msg.template?.footer && (
                   <span className="float-right ml-2 mt-1 -mb-1">

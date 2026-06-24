@@ -58,13 +58,46 @@ router.post("/", async (req, res) => {
       return;
     }
 
-    const gym = await prisma.gym.findFirst({
+    // Find all gyms sharing this phone number ID
+    const gyms = await prisma.gym.findMany({
       where: { whatsapp_phone_number_id: phoneNumberId },
     });
 
-    if (!gym) {
+    if (gyms.length === 0) {
       console.warn(`⚠️ Received WhatsApp webhook for unregistered Phone ID: ${phoneNumberId}`);
       return;
+    }
+
+    // Determine the correct gym tenant
+    let gym = gyms[0];
+    if (gyms.length > 1) {
+      let resolvedGym = null;
+
+      if (value.messages?.length) {
+        const phoneToMatch = value.messages[0].from;
+        const matchingMember = await prisma.member.findFirst({
+          where: {
+            phone: phoneToMatch,
+            gymId: { in: gyms.map(g => g.id) }
+          }
+        });
+        if (matchingMember) {
+          resolvedGym = gyms.find(g => g.id === matchingMember.gymId);
+        }
+      } else if (value.statuses?.length) {
+        const messageId = value.statuses[0].id;
+        const matchingMessage = await prisma.whatsAppMessage.findUnique({
+          where: { messageId },
+          select: { gymId: true }
+        });
+        if (matchingMessage) {
+          resolvedGym = gyms.find(g => g.id === matchingMessage.gymId);
+        }
+      }
+
+      if (resolvedGym) {
+        gym = resolvedGym;
+      }
     }
 
     console.log(`🏢 Resolved Gym Tenant: "${gym.name}" (Slug: ${gym.slug}) for Phone ID: ${phoneNumberId}`);

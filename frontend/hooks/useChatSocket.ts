@@ -42,13 +42,26 @@ export function useChatSocket({
     /* =========================
        NEW MESSAGE HANDLER
     ========================== */
-    const handleNewMessage = (msg: Message) => {
-      setMessages((prev) => {
-        const exists = prev.some((m) => m.id === msg.id);
-        return exists ? prev : [...prev, msg];
-      });
+    const handleNewMessage = (msg: any) => {
+      const mappedMsg: Message = {
+        id: msg.id,
+        whatsappMessageId: msg.whatsappMessageId,
+        content: msg.content,
+        text: msg.text || msg.content,
+        mediaUrl: msg.mediaUrl,
+        mimeType: msg.mimeType,
+        caption: msg.caption,
+        sender: msg.sender || (msg.direction === "outbound" ? "executive" : "customer"),
+        timestamp: msg.timestamp || msg.createdAt || new Date().toISOString(),
+        status: msg.status || "delivered",
+      };
 
-      if (msg.sender === "customer") {
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.id === mappedMsg.id);
+        return exists ? prev : [...prev, mappedMsg];
+      });
+ 
+      if (mappedMsg.sender === "customer") {
         onCustomerMessage?.();
       }
     };
