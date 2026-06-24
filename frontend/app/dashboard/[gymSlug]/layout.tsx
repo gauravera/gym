@@ -61,7 +61,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
         {/* Brand Header */}
         <div className="flex h-16 items-center gap-2 border-b border-zinc-800 px-6 bg-zinc-900">
           <Dumbbell className="h-6 w-6 text-cyan-400" />
-          <span className="text-lg font-black tracking-tight text-white uppercase">
+          <span className="text-lg font-black tracking-tight text-zinc-100 uppercase">
             Fit<span className="text-cyan-400">Flow</span>
           </span>
         </div>
@@ -120,7 +120,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
           <div className="flex items-center gap-4">
             <span className="text-sm font-bold text-zinc-400">Dashboard</span>
             <span className="text-zinc-700">/</span>
-            <span className="text-sm font-extrabold text-white">{gym.name}</span>
+            <span className="text-sm font-extrabold text-zinc-100">{gym.name}</span>
           </div>
           
           <div className="flex items-center gap-4">

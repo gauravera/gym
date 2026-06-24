@@ -28,9 +28,6 @@
   --bubble-inbound-bg: #1f2937;
   --bubble-inbound-text: #f8fafc;
   --bubble-inbound-meta: #8ea0bc;
-
-  --color-white: #ffffff;
-  --color-black: #0b1020;
 }
 
 @theme inline {
@@ -50,9 +47,6 @@
   --color-zinc-300: var(--text-secondary);
   --color-zinc-200: var(--text-primary);
   --color-zinc-100: var(--text-primary);
-  
-  --color-white: var(--color-white);
-  --color-black: var(--color-black);
 
   --color-wa-chat-bg: var(--wa-chat-bg);
 
@@ -99,9 +93,6 @@ body {
   --bubble-inbound-bg: #1f2937;
   --bubble-inbound-text: #f8fafc;
   --bubble-inbound-meta: #8ea0bc;
-
-  --color-white: #ffffff;
-  --color-black: #0b1020;
 }
 
 /* Light Theme */
@@ -129,9 +120,6 @@ body {
   --bubble-inbound-bg: #ffffff;
   --bubble-inbound-text: #111b21;
   --bubble-inbound-meta: #667781;
-
-  --color-white: #0f172a;
-  --color-black: #ffffff;
 }
 
 /* Coloured Theme (Tinted Neutral Shell) */
@@ -159,9 +147,6 @@ body {
   --bubble-inbound-bg: #ffffff;
   --bubble-inbound-text: #0f172a;
   --bubble-inbound-meta: #64748b;
-
-  --color-white: #0f172a;
-  --color-black: #eef6ff;
 }
 
 /* =====================================================

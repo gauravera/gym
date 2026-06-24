@@ -79,24 +79,24 @@ export default function MediaModal(props: MediaModalProps) {
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.92, opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-md bg-card rounded-2xl shadow-2xl overflow-hidden border"
+                        className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-md bg-zinc-900 rounded-2xl shadow-2xl overflow-hidden border border-zinc-800"
                     >
                         {/* Header */}
-                        <div className="flex items-center justify-between border-b p-4">
+                        <div className="flex items-center justify-between border-b border-zinc-800 p-4">
                             <div>
-                                <h2 className="text-xl font-bold">{title}</h2>
-                                <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+                                <h2 className="text-xl font-extrabold text-zinc-100">{title}</h2>
+                                <p className="text-sm text-zinc-400 mt-1">{subtitle}</p>
                             </div>
                             <button
                                 onClick={onClose}
-                                className="p-1.5 rounded-lg hover:bg-muted"
+                                className="p-2 rounded-xl hover:bg-zinc-850 text-zinc-400 hover:text-zinc-100 transition-all cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
                         {/* Body */}
-                        <div className="p-4">
+                        <div className="p-4 bg-zinc-900">
                             {mediaModal.type === "image" && (
                                 <ImagePicker
                                     imageMode={imageMode}

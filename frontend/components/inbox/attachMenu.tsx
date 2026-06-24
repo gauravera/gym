@@ -25,13 +25,14 @@ export default function AttachMenu({ open, onClose, onSelect }: Props) {
                         exit={{ opacity: 0, y: 8, scale: 0.96 }}
                         transition={{ duration: 0.15 }}
                         className="
-              absolute bottom-20 left-4 z-50
-              w-48
-              rounded-xl
-              shadow-2xl
-              py-2
-              bg-[#1f1f1f]
-            "
+                          absolute bottom-20 left-4 z-50
+                          w-48
+                          rounded-2xl
+                          shadow-2xl
+                          py-2
+                          bg-zinc-900
+                          border border-zinc-800
+                        "
                     >
                         <AttachItem
                             icon="📝"
@@ -93,13 +94,14 @@ function AttachItem({
         <button
             onClick={onClick}
             className="
-        w-full flex items-center gap-4
-        px-4 py-2
-        text-sm
-        text-white
-        hover:bg-white/10
-        transition-colors
-      "
+              w-full flex items-center gap-4
+              px-4 py-2.5
+              text-sm
+              text-zinc-100
+              hover:bg-zinc-850/50
+              transition-all
+              cursor-pointer
+            "
         >
             <div
                 className="w-9 h-9 rounded-full flex items-center justify-center text-white"
