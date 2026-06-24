@@ -110,6 +110,7 @@ model Member {
   emergencyContact String?
   notes            String?
   isBotDisabled    Boolean           @default(false) // For Human Takeover
+  blockedAt        DateTime?
   gymId            String
   gym              Gym               @relation(fields: [gymId], references: [id], onDelete: Cascade)
   createdAt        DateTime          @default(now())
