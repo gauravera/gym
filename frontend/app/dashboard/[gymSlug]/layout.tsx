@@ -41,13 +41,13 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
   }
 
   const sidebarLinks = [
-    { label: 'Members Directory', icon: <Users className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/members` },
-    { label: 'Membership Plans', icon: <CreditCard className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/plans` },
-    { label: 'Payments Portal', icon: <CheckSquare className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/payments` },
-    { label: 'Chatbot Configs', icon: <Bot className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/chatbot` },
-    { label: 'Live Human Chat', icon: <MessageCircle className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/live-chat` },
-    { label: 'Message Templates', icon: <FileText className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/templates` },
-    { label: 'Integrations Setup', icon: <Settings className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/settings` },
+    { label: 'Members', icon: <Users className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/members` },
+    { label: 'Plans', icon: <CreditCard className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/plans` },
+    { label: 'Payments', icon: <CheckSquare className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/payments` },
+    { label: 'Chatbot', icon: <Bot className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/chatbot` },
+    { label: 'Inbox', icon: <MessageCircle className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/inbox` },
+    { label: 'Templates', icon: <FileText className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/templates` },
+    { label: 'Settings', icon: <Settings className="h-4 w-4" />, href: `/dashboard/${params.gymSlug}/settings` },
   ];
 
   return (

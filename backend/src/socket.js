@@ -1,8 +1,18 @@
 import { Server } from "socket.io";
-import jwt from "jsonwebtoken";
 import prisma from "./prisma.js";
+import { verifyJWT } from "./utils/auth.js";
 
 let io;
+
+function getCookie(cookieString, name) {
+  if (!cookieString) return null;
+  const pairs = cookieString.split(";");
+  for (const pair of pairs) {
+    const [key, value] = pair.trim().split("=");
+    if (key === name) return value;
+  }
+  return null;
+}
 
 /**
  * Initialize Socket.IO
@@ -23,17 +33,25 @@ export function initSocket(httpServer) {
    */
   io.use(async (socket, next) => {
     try {
-      const token =
+      let token =
         socket.handshake.auth?.token ||
         socket.handshake.headers?.authorization?.replace("Bearer ", "");
+
+      if (!token && socket.handshake.headers?.cookie) {
+        token = getCookie(socket.handshake.headers.cookie, "auth_token");
+      }
 
       if (!token) {
         console.error("❌ SOCKET: Missing token");
         return next(new Error("Authentication required"));
       }
 
-      // 🔍 Verify JWT
-      const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || "fallback_secret");
+      // 🔍 Verify JWT using local auth utility
+      const payload = verifyJWT(token);
+      if (!payload) {
+        console.error("❌ SOCKET: Invalid or expired token");
+        return next(new Error("Invalid token"));
+      }
 
       // Support userId or sub
       const userId = payload.userId || payload.sub;

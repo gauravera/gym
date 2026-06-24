@@ -10,6 +10,8 @@ import usersRouter from "./routes/users.js";
 import whatsappRouter from "./routes/whatsapp.route.js";
 import whatsappWebhookRouter from "./routes/whatsappWebhook.route.js";
 import whatsappTemplatesRouter from "./routes/whatsappTemplates.route.js";
+import inboxRouter from "./routes/inbox.route.js";
+import membersRouter from "./routes/members.route.js";
 import { authenticateToken, scopeToGym } from "./middleware/auth.js";
 
 
@@ -52,6 +54,9 @@ app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/dashboard/:gymSlug/whatsapp/templates", authenticateToken, scopeToGym, whatsappTemplatesRouter);
 app.use("/api/dashboard/:gymSlug/whatsapp", authenticateToken, scopeToGym, whatsappRouter);
+app.use("/api/dashboard/:gymSlug/inbox", authenticateToken, scopeToGym, inboxRouter);
+app.use("/api/dashboard/:gymSlug/members", authenticateToken, scopeToGym, membersRouter);
+app.use("/uploads", express.static("uploads"));
 app.use("/webhook", whatsappWebhookRouter);
 
 

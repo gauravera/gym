@@ -119,6 +119,27 @@ router.post("/", async (req, res) => {
             const io = getIO();
             io.to(`gym:${gym.id}`).emit("whatsapp:message", incomingMessage);
             console.log(`🔌 Emitted websocket event "whatsapp:message" for Gym ID: ${gym.id}`);
+
+            // Find the member to emit conversation-level message update
+            const member = await prisma.member.findFirst({
+              where: {
+                gymId: gym.id,
+                phone: senderPhone,
+              },
+            });
+
+            if (member) {
+              const mappedMsg = {
+                id: incomingMessage.id,
+                whatsappMessageId: incomingMessage.messageId,
+                content: incomingMessage.text,
+                direction: "inbound",
+                status: "received",
+                createdAt: incomingMessage.createdAt
+              };
+              io.to(`conversation:${member.id}`).emit("message:new", mappedMsg);
+            }
+            io.to(`gym:${gym.id}`).emit("inbox:update");
           } catch (wsErr) {
             console.error("❌ Failed to emit WhatsApp WebSocket event:", wsErr.message);
           }
@@ -181,6 +202,21 @@ router.post("/", async (req, res) => {
               errorMessage,
             });
             console.log(`🔌 Emitted websocket event "whatsapp:status" for Gym ID: ${gym.id}`);
+
+            // Emit to inbox conversation and update lists
+            const member = await prisma.member.findFirst({
+              where: {
+                gymId: gym.id,
+                phone: message.recipientPhone
+              }
+            });
+            if (member) {
+              io.to(`conversation:${member.id}`).emit("message:status", {
+                whatsappMessageId: messageId,
+                status: metaState.toLowerCase()
+              });
+            }
+            io.to(`gym:${gym.id}`).emit("inbox:update");
           } catch (wsErr) {
             console.error("❌ Failed to emit status update WebSocket event:", wsErr.message);
           }
