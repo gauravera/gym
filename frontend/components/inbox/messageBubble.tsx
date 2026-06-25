@@ -859,7 +859,7 @@ export default function MessageBubble({
                   <div className="text-xs font-semibold text-cyan-400 mb-1">
                     {repliedMessage.sender === "executive"
                       ? "You"
-                      : conversation.companyName}
+                      : conversation.memberName}
                   </div>
                   <div className="text-xs text-zinc-400 line-clamp-2">
                     {repliedMessage.text ||

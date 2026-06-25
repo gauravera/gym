@@ -112,7 +112,7 @@ router.get("/", async (req, res) => {
 
         return {
           id: member.id,
-          name: member.name,
+          name: member.memberName,
           phone: member.phone,
           isBotDisabled: member.isBotDisabled,
           notes: member.notes,
@@ -221,7 +221,7 @@ router.get("/:memberId", async (req, res) => {
       conversationId: member.id,
       member: {
         id: member.id,
-        name: member.name,
+        name: member.memberName,
         phone: member.phone,
         isBotDisabled: member.isBotDisabled,
         notes: member.notes,
@@ -494,8 +494,8 @@ router.post("/:memberId/toggle-bot", async (req, res) => {
       data: {
         action: isBotDisabled ? "BOT_TAKEOVER_START" : "BOT_TAKEOVER_STOP",
         details: isBotDisabled
-          ? `Human took over conversation with member ${member.name} (${member.phone}). Bot paused.`
-          : `Chatbot resumed control for member ${member.name} (${member.phone}).`,
+          ? `Human took over conversation with member ${member.memberName} (${member.phone}). Bot paused.`
+          : `Chatbot resumed control for member ${member.memberName} (${member.phone}).`,
         gymId: gym.id,
         userId: req.user?.userId || null
       }
@@ -626,7 +626,7 @@ router.post("/check-number", async (req, res) => {
         lead: {
           id: existingMember.id,
           phoneNumber: existingMember.phone,
-          companyName: existingMember.name
+          memberName: existingMember.memberName
         }
       });
     }
@@ -649,7 +649,7 @@ router.post("/check-number", async (req, res) => {
  */
 router.post("/create-conversation", async (req, res) => {
   const { gymSlug } = req.params;
-  const { phoneNumber, companyName } = req.body;
+  const { phoneNumber, memberName } = req.body;
 
   if (!phoneNumber) {
     return res.status(400).json({ error: "Phone number is required" });
@@ -681,14 +681,14 @@ router.post("/create-conversation", async (req, res) => {
         data: {
           gymId: gym.id,
           phone: formattedNumber,
-          name: companyName || formattedNumber
+          memberName: memberName || formattedNumber
         }
       });
 
       await prisma.auditLog.create({
         data: {
           action: "MEMBER_CREATE",
-          details: `Member ${member.name} (${formattedNumber}) created via start conversation in inbox.`,
+          details: `Member ${member.memberName} (${formattedNumber}) created via start conversation in inbox.`,
           gymId: gym.id,
           userId: req.user?.userId || null
         }
@@ -708,7 +708,7 @@ router.post("/create-conversation", async (req, res) => {
       lead: {
         id: member.id,
         phoneNumber: member.phone,
-        companyName: member.name
+        memberName: member.memberName
       }
     });
   } catch (err) {

@@ -87,13 +87,13 @@ export default function ChatHeader({
         )}
 
         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-cyan-600 to-cyan-500/70 flex items-center justify-center text-white font-extrabold flex-shrink-0 shadow-sm">
-          {conversation.companyName?.charAt(0)?.toUpperCase() || "?"}
+          {conversation.memberName?.charAt(0)?.toUpperCase() || "?"}
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h3 className="font-bold text-sm sm:text-base text-zinc-100 truncate">
-              {conversation.companyName}
+              {conversation.memberName}
             </h3>
             {conversation.isBlocked && (
               <span className="bg-rose-500/15 text-rose-400 text-[10px] font-medium px-2.5 py-0.5 rounded-full border border-rose-500/20 flex-shrink-0 animate-pulse">

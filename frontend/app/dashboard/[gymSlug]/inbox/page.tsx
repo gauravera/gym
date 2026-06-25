@@ -38,7 +38,18 @@ const mapApiConversation = (c: any): Conversation => {
 
   return {
     id: c.id,
-    companyName: c.name,
+    memberName: (() => {
+      const name = c.name;
+      const whatsapp = c.whatsappName;
+      const phone = c.phone;
+      if (!name) return whatsapp || phone;
+      const cleanName = name.replace(/[+\-\s()]/g, "");
+      const isPhoneOnly = /^\d+$/.test(cleanName);
+      if (isPhoneOnly && whatsapp) {
+        return whatsapp;
+      }
+      return name;
+    })(),
     phone: c.phone,
     lastMessage: c.lastMessage ? c.lastMessage.content : "",
     lastActivity: c.lastMessage
@@ -599,6 +610,18 @@ export default function InboxPage() {
           c.id === id
             ? {
                 ...c,
+                memberName: (() => {
+                  const name = res.data.member?.name;
+                  const whatsapp = res.data.member?.whatsappName;
+                  const phone = res.data.member?.phone;
+                  if (!name) return whatsapp || phone;
+                  const cleanName = name.replace(/[+\-\s()]/g, "");
+                  const isPhoneOnly = /^\d+$/.test(cleanName);
+                  if (isPhoneOnly && whatsapp) {
+                    return whatsapp;
+                  }
+                  return name;
+                })(),
                 sessionStarted: res.data.sessionStarted,
                 sessionActive: res.data.sessionActive,
                 sessionExpiresAt: res.data.sessionExpiresAt,
