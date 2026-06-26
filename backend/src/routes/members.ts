@@ -31,7 +31,12 @@ router.get('/', async (req: RequestWithUser, res: Response): Promise<any> => {
       },
     });
 
-    return res.json({ members });
+    const mappedMembers = members.map(m => ({
+      ...m,
+      name: m.memberName
+    }));
+
+    return res.json({ members: mappedMembers });
   } catch (error) {
     console.error('Error fetching members API:', error);
     return res.status(500).json({ error: 'Internal server error' });
@@ -52,9 +57,10 @@ router.post('/', async (req: RequestWithUser, res: Response): Promise<any> => {
       return res.status(404).json({ error: 'Gym not found' });
     }
 
-    const { name, phone, email, address, dob, emergencyContact, notes } = req.body;
+    const { name, memberName, phone, email, address, dob, emergencyContact, notes } = req.body;
+    const actualName = name || memberName;
 
-    if (!name || !phone) {
+    if (!actualName || !phone) {
       return res.status(400).json({ error: 'Name and phone are required' });
     }
 
@@ -79,7 +85,7 @@ router.post('/', async (req: RequestWithUser, res: Response): Promise<any> => {
 
     const member = await db.member.create({
       data: {
-        name,
+        memberName: actualName,
         phone,
         email: email || null,
         address: address || null,
@@ -96,8 +102,8 @@ router.post('/', async (req: RequestWithUser, res: Response): Promise<any> => {
         gymId: gym.id,
         memberId: member.id,
         recipientPhone: phone,
-        title: `TEMPLATE:welcome_member:${name},${gym.name}`,
-        message: `Welcome ${name} to ${gym.name}! Your account has been registered successfully.`,
+        title: `TEMPLATE:welcome_member:${actualName},${gym.name}`,
+        message: `Welcome ${actualName} to ${gym.name}! Your account has been registered successfully.`,
         type: 'ACTIVATION',
         status: 'PENDING',
       },
@@ -106,13 +112,18 @@ router.post('/', async (req: RequestWithUser, res: Response): Promise<any> => {
     await db.auditLog.create({
       data: {
         action: 'MEMBER_CREATE',
-        details: `Created member ${name} (${phone})`,
+        details: `Created member ${actualName} (${phone})`,
         gymId: gym.id,
         userId: session.userId,
       },
     });
 
-    return res.json({ success: true, member });
+    const mappedMember = {
+      ...member,
+      name: member.memberName
+    };
+
+    return res.json({ success: true, member: mappedMember });
   } catch (error) {
     console.error('Error creating member API:', error);
     return res.status(500).json({ error: 'Internal server error' });
@@ -157,13 +168,18 @@ router.post('/:memberId/toggle-bot', async (req: RequestWithUser, res: Response)
     await db.auditLog.create({
       data: {
         action: isBotDisabled ? 'BOT_PAUSE' : 'BOT_RESUME',
-        details: `${isBotDisabled ? 'Paused' : 'Resumed'} chatbot for member ${member.name} (${member.phone})`,
+        details: `${isBotDisabled ? 'Paused' : 'Resumed'} chatbot for member ${member.memberName} (${member.phone})`,
         gymId: member.gymId,
         userId: session.userId,
       },
     });
 
-    return res.json({ success: true, member });
+    const mappedMember = {
+      ...member,
+      name: member.memberName
+    };
+
+    return res.json({ success: true, member: mappedMember });
   } catch (error) {
     console.error('Error toggling bot status:', error);
     return res.status(500).json({ error: 'Internal server error' });
@@ -184,9 +200,10 @@ router.put('/:memberId', async (req: RequestWithUser, res: Response): Promise<an
       return res.status(404).json({ error: 'Gym not found' });
     }
 
-    const { name, phone, email, address, dob, emergencyContact, notes } = req.body;
+    const { name, memberName, phone, email, address, dob, emergencyContact, notes } = req.body;
+    const actualName = name || memberName;
 
-    if (!name || !phone) {
+    if (!actualName || !phone) {
       return res.status(400).json({ error: 'Name and phone are required' });
     }
 
@@ -222,7 +239,7 @@ router.put('/:memberId', async (req: RequestWithUser, res: Response): Promise<an
         id: memberId,
       },
       data: {
-        name,
+        memberName: actualName,
         phone,
         email: email || null,
         address: address || null,
@@ -235,13 +252,18 @@ router.put('/:memberId', async (req: RequestWithUser, res: Response): Promise<an
     await db.auditLog.create({
       data: {
         action: 'MEMBER_UPDATE',
-        details: `Updated member ${name} (${phone})`,
+        details: `Updated member ${actualName} (${phone})`,
         gymId: gym.id,
         userId: session.userId,
       },
     });
 
-    return res.json({ success: true, member });
+    const mappedMember = {
+      ...member,
+      name: member.memberName
+    };
+
+    return res.json({ success: true, member: mappedMember });
   } catch (error) {
     console.error('Error updating member:', error);
     return res.status(500).json({ error: 'Internal server error' });
@@ -281,7 +303,7 @@ router.delete('/:memberId', async (req: RequestWithUser, res: Response): Promise
     await db.auditLog.create({
       data: {
         action: 'MEMBER_DELETE',
-        details: `Deleted member ${member.name} (${member.phone})`,
+        details: `Deleted member ${member.memberName} (${member.phone})`,
         gymId: gym.id,
         userId: session.userId,
       },

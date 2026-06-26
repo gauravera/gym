@@ -31,7 +31,7 @@ export default function ConversationList({
     lead?: {
       id: string;
       phoneNumber: string;
-      companyName: string;
+      memberName: string;
     };
   } | null>(null);
 
@@ -39,7 +39,7 @@ export default function ConversationList({
   const filteredConversations = conversations.filter((conv) => {
     const query = searchQuery.toLowerCase();
     return (
-      conv.companyName?.toLowerCase().includes(query) ||
+      conv.memberName?.toLowerCase().includes(query) ||
       conv.phone?.toLowerCase().includes(query)
     );
   });
@@ -108,7 +108,7 @@ export default function ConversationList({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             phoneNumber: whatsappCheckResult.phoneNumber,
-            companyName: whatsappCheckResult.lead?.companyName || whatsappCheckResult.phoneNumber,
+            memberName: whatsappCheckResult.lead?.memberName || whatsappCheckResult.phoneNumber,
           }),
         });
 
@@ -176,7 +176,7 @@ export default function ConversationList({
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-zinc-100">
-                      {whatsappCheckResult.lead?.companyName ||
+                      {whatsappCheckResult.lead?.memberName ||
                         whatsappCheckResult.phoneNumber}
                     </p>
                     <p className="text-xs text-zinc-400">
@@ -215,14 +215,14 @@ export default function ConversationList({
               <div className="flex items-start gap-3.5 w-full overflow-hidden">
                 <div className="relative flex-shrink-0">
                   <div className="w-11 h-11 rounded-full bg-gradient-to-br from-cyan-600 to-cyan-500 flex items-center justify-center text-white font-extrabold text-base shadow-sm">
-                    {conv.companyName?.charAt(0)?.toUpperCase() || "?"}
+                    {conv.memberName?.charAt(0)?.toUpperCase() || "?"}
                   </div>
                 </div>
  
                 <div className="flex-1 min-w-0 space-y-1.5 pr-1">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-bold text-zinc-100 truncate">
-                      {conv.companyName}
+                      {conv.memberName}
                     </p>
                     <span className="text-xs text-zinc-400 font-medium whitespace-nowrap">
                       {conv.lastActivity}

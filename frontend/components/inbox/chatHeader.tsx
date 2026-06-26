@@ -17,11 +17,13 @@ export default function ChatHeader({
   onBack,
   onUpdateLeadStatus,
   onToggleBlock,
+  onAddAsMember,
 }: {
   conversation: Conversation;
   onBack?: () => void;
   onUpdateLeadStatus?: (leadId: string, status: string) => Promise<void>;
   onToggleBlock?: () => void;
+  onAddAsMember?: () => void;
 }) {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -87,13 +89,13 @@ export default function ChatHeader({
         )}
 
         <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-cyan-600 to-cyan-500/70 flex items-center justify-center text-white font-extrabold flex-shrink-0 shadow-sm">
-          {conversation.companyName?.charAt(0)?.toUpperCase() || "?"}
+          {conversation.memberName?.charAt(0)?.toUpperCase() || "?"}
         </div>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h3 className="font-bold text-sm sm:text-base text-zinc-100 truncate">
-              {conversation.companyName}
+              {conversation.memberName}
             </h3>
             {conversation.isBlocked && (
               <span className="bg-rose-500/15 text-rose-400 text-[10px] font-medium px-2.5 py-0.5 rounded-full border border-rose-500/20 flex-shrink-0 animate-pulse">
@@ -108,6 +110,27 @@ export default function ChatHeader({
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+        {/* Add as Member button */}
+        {!conversation.isMember && onAddAsMember && (
+          <button
+            onClick={onAddAsMember}
+            className="rounded-full bg-cyan-600 hover:bg-cyan-500 text-white text-[11px] font-bold px-3.5 py-1.5 transition-colors border border-cyan-500/30 flex items-center gap-1 shadow-sm mr-1 cursor-pointer"
+          >
+            <UserCheck className="w-3.5 h-3.5" />
+            <span>Add as Member</span>
+          </button>
+        )}
+
+        {/* Active Membership Badge */}
+        {conversation.isMember && conversation.planName && (
+          <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1.5 rounded-full text-xs font-bold mr-1 shadow-sm select-none">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span>Active: {conversation.planName}</span>
+          </div>
+        )}
         {/* Lead Status Dropdown */}
         {conversation.leadId && onUpdateLeadStatus && (
           <div className="relative block" ref={statusRef}>

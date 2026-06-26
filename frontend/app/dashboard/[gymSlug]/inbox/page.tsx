@@ -38,7 +38,18 @@ const mapApiConversation = (c: any): Conversation => {
 
   return {
     id: c.id,
-    companyName: c.name,
+    memberName: (() => {
+      const name = c.name;
+      const whatsapp = c.whatsappName;
+      const phone = c.phone;
+      if (!name) return whatsapp || phone;
+      const cleanName = name.replace(/[+\-\s()]/g, "");
+      const isPhoneOnly = /^\d+$/.test(cleanName);
+      if (isPhoneOnly && whatsapp) {
+        return whatsapp;
+      }
+      return name;
+    })(),
     phone: c.phone,
     lastMessage: c.lastMessage ? c.lastMessage.content : "",
     lastActivity: c.lastMessage
@@ -59,6 +70,8 @@ const mapApiConversation = (c: any): Conversation => {
     sessionExpiresAt: c.sessionExpiresAt ?? null,
     templateRequired: c.sessionActive === false,
     isBlocked: !!c.isBlocked,
+    isMember: c.isMember ?? false,
+    planName: c.planName ?? null,
   };
 };
 
@@ -148,6 +161,67 @@ function ChatArea({
     rect: DOMRect;
   } | null>(null);
   const [remainingTime, setRemainingTime] = useState<string | null>(null);
+
+  // Membership plan assignment states
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [plans, setPlans] = useState<any[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modalError, setModalError] = useState("");
+
+  const fetchPlans = async () => {
+    try {
+      const res = await fetch(`/api/dashboard/${gymSlug}/plans`);
+      if (res.ok) {
+        const data = await res.json();
+        setPlans(data.plans || []);
+        if (data.plans?.length > 0) {
+          setSelectedPlanId(data.plans[0].id);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching plans:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (isAddMemberOpen) {
+      fetchPlans();
+    }
+  }, [isAddMemberOpen]);
+
+  const handleAddMemberSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPlanId) {
+      setModalError("Please select a membership plan.");
+      return;
+    }
+    setIsSubmitting(true);
+    setModalError("");
+    try {
+      const res = await fetch(`/api/dashboard/${gymSlug}/members/${conversation.id}/memberships`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId: selectedPlanId,
+          startDate
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success("Membership assigned successfully!");
+        setIsAddMemberOpen(false);
+      } else {
+        setModalError(data.error || "Failed to assign membership.");
+      }
+    } catch (err) {
+      console.error("Error creating membership:", err);
+      setModalError("An unexpected error occurred.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const [imagePreview, setImagePreview] = useState<{
     files: File[];
@@ -385,6 +459,7 @@ function ChatArea({
         conversation={conversation}
         onBack={onBack}
         onToggleBlock={() => onToggleBlock?.(conversation.id, !!conversation.isBlocked)}
+        onAddAsMember={() => setIsAddMemberOpen(true)}
       />
 
       <SessionBanner
@@ -529,6 +604,88 @@ function ChatArea({
         }
         onSend={sendImageFromPreview}
       />
+
+      {isAddMemberOpen && (
+        <div
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/65 backdrop-blur-md p-4"
+          onClick={() => setIsAddMemberOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-5 text-white"
+          >
+            <div className="border-b border-zinc-900 pb-3">
+              <h3 className="text-base font-extrabold tracking-tight text-zinc-100">
+                Activate Gym Membership
+              </h3>
+              <p className="text-xs text-zinc-400 mt-1">
+                Assign a membership plan for <span className="text-cyan-400 font-bold">{conversation.memberName}</span>
+              </p>
+            </div>
+
+            {modalError && (
+              <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs font-semibold text-rose-400">
+                {modalError}
+              </div>
+            )}
+
+            <form onSubmit={handleAddMemberSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="mb-2 block font-semibold text-zinc-400 uppercase tracking-wider">
+                  Select Plan
+                </label>
+                {plans.length === 0 ? (
+                  <div className="text-zinc-500 py-2.5">
+                    Loading plans... (Create plans in the Membership Plans section if none exist)
+                  </div>
+                ) : (
+                  <select
+                    value={selectedPlanId}
+                    onChange={(e) => setSelectedPlanId(e.target.value)}
+                    className="w-full rounded-xl border border-zinc-805 bg-zinc-900 px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500 cursor-pointer animate-none"
+                  >
+                    {plans.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} - ₹{p.price} ({p.durationDays} Days)
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-2 block font-semibold text-zinc-400 uppercase tracking-wider">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  required
+                  className="w-full rounded-xl border border-zinc-805 bg-zinc-900 px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-3">
+                <button
+                  type="submit"
+                  disabled={isSubmitting || plans.length === 0}
+                  className="flex-1 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white py-3 font-bold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? "Activating..." : "Activate Membership"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAddMemberOpen(false)}
+                  className="flex-1 rounded-xl border border-zinc-800 hover:bg-zinc-900 text-zinc-400 py-3 font-bold transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -599,10 +756,24 @@ export default function InboxPage() {
           c.id === id
             ? {
                 ...c,
+                memberName: (() => {
+                  const name = res.data.member?.name;
+                  const whatsapp = res.data.member?.whatsappName;
+                  const phone = res.data.member?.phone;
+                  if (!name) return whatsapp || phone;
+                  const cleanName = name.replace(/[+\-\s()]/g, "");
+                  const isPhoneOnly = /^\d+$/.test(cleanName);
+                  if (isPhoneOnly && whatsapp) {
+                    return whatsapp;
+                  }
+                  return name;
+                })(),
                 sessionStarted: res.data.sessionStarted,
                 sessionActive: res.data.sessionActive,
                 sessionExpiresAt: res.data.sessionExpiresAt,
                 isBlocked: !!res.data.member?.blockedAt,
+                isMember: res.data.member?.isMember ?? false,
+                planName: res.data.member?.planName ?? null,
               }
             : c,
         ),

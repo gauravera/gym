@@ -158,6 +158,39 @@ router.post("/", async (req, res) => {
             }
           }
 
+          // Extract WhatsApp profile name
+          const contactObj = value.contacts?.find((c) => c.wa_id === senderPhone) || value.contacts?.[0];
+          const profileName = contactObj?.profile?.name || null;
+
+          // Find member
+          let member = await prisma.member.findFirst({
+            where: {
+              gymId: gym.id,
+              phone: senderPhone
+            }
+          });
+
+          if (member) {
+            // Update existing member's whatsappName and optionally memberName if it's currently a phone number
+            const cleanMemberName = member.memberName.replace(/[+\-\s()]/g, "");
+            const isPhoneOnly = /^\d+$/.test(cleanMemberName) || cleanMemberName === member.phone;
+
+            const updateData = {};
+            if (profileName && profileName !== member.whatsappName) {
+              updateData.whatsappName = profileName;
+            }
+            if (profileName && isPhoneOnly && profileName !== member.memberName) {
+              updateData.memberName = profileName;
+            }
+
+            if (Object.keys(updateData).length > 0) {
+              member = await prisma.member.update({
+                where: { id: member.id },
+                data: updateData
+              });
+            }
+          }
+
           // Log message to database
           const incomingMessage = await prisma.whatsAppMessage.create({
             data: {
@@ -177,14 +210,6 @@ router.post("/", async (req, res) => {
             const io = getIO();
             io.to(`gym:${gym.id}`).emit("whatsapp:message", incomingMessage);
             console.log(`🔌 Emitted websocket event "whatsapp:message" for Gym ID: ${gym.id}`);
-
-            // Find the member to emit conversation-level message update
-            const member = await prisma.member.findFirst({
-              where: {
-                gymId: gym.id,
-                phone: senderPhone,
-              },
-            });
 
             if (member) {
               // Parse message text if it is a media JSON payload

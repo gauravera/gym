@@ -46,7 +46,7 @@ export default function ChatFooter({
             <div className="font-bold">
               {replyTo.sender === "executive"
                 ? "You"
-                : conversation.companyName}
+                : conversation.memberName}
             </div>
             <div className="truncate max-w-xs text-zinc-400">
               {replyTo.text || "Media message"}

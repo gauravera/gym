@@ -16,7 +16,7 @@ export interface ApiResponse<T = any> {
 
 export interface Contact {
   id: string;
-  company_name: string;
+  member_name: string;
   mobile_number: string;
   category?: number;
   category_name?: string;
@@ -36,7 +36,7 @@ export interface WhatsAppRecipient extends Contact {
 
 export interface Lead {
   id: string;
-  company_name: string;
+  member_name: string;
   mobile_number: string;
   email?: string;
   city?: string;
@@ -82,10 +82,12 @@ export interface Campaign {
 
 export interface Conversation {
   id: string;
-  companyName: string;
+  memberName: string;
   phone: string;
   status?: string;
   leadId?: string;
+  isMember?: boolean;
+  planName?: string | null;
 
   lastMessage: string;
   lastActivity: string;
