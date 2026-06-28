@@ -162,6 +162,18 @@ body {
   color: var(--text-primary) !important;
 }
 
+html {
+  font-size: 16px; /* Base size for mobile/tablet */
+}
+
+@media (min-width: 1024px) {
+  html {
+    /* Scale down UI proportionally for desktop screens */
+    /* 1.11vw ensures it reaches 16px at 1440px viewport */
+    font-size: clamp(11px, 1.11vw, 16px);
+  }
+}
+
 /* Custom Webkit scrollbars mapped to accent tokens */
 ::-webkit-scrollbar {
   width: 6px;
