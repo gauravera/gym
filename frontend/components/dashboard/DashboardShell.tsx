@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from '@/components/dashboard/ThemeToggle';
@@ -18,7 +18,8 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';
-
+import { connectSocket, getSocket } from '@/lib/socket';
+import CallModal from '@/components/inbox/callModal';
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -30,6 +31,35 @@ interface DashboardShellProps {
 export default function DashboardShell({ children, gym, activeUser, gymSlug }: DashboardShellProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
+
+  // Global Inbound Call State
+  const [incomingCall, setIncomingCall] = useState<any>(null);
+
+  useEffect(() => {
+    if (!gym?.id) return;
+    
+    connectSocket();
+    const socket = getSocket();
+
+    const handleCallEvent = (eventData: any) => {
+      console.log("Global call event:", eventData);
+      if (
+        eventData.event === "connect" &&
+        eventData.direction === "USER_INITIATED" &&
+        eventData.sdp
+      ) {
+        setIncomingCall(eventData);
+      } else if (eventData.event === "terminate" && incomingCall?.callId === eventData.callId) {
+        setIncomingCall(null);
+      }
+    };
+
+    socket.on("whatsapp_call_event", handleCallEvent);
+
+    return () => {
+      socket.off("whatsapp_call_event", handleCallEvent);
+    };
+  }, [gym?.id, incomingCall?.callId]);
 
   const sidebarLinks = [
     { label: 'Members', icon: <Users className="h-4 w-4 shrink-0" />, href: `/dashboard/${gymSlug}/members` },
@@ -161,6 +191,21 @@ export default function DashboardShell({ children, gym, activeUser, gymSlug }: D
         {/* Content Area */}
         <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-zinc-950/20">{children}</main>
       </div>
+
+      {/* Global Inbound Call Modal */}
+      {incomingCall && (
+        <CallModal
+          isOpen={!!incomingCall}
+          onClose={() => setIncomingCall(null)}
+          gymSlug={gymSlug}
+          conversationId={incomingCall.conversationId}
+          recipientName={incomingCall.memberName}
+          recipientPhone={incomingCall.memberPhone}
+          isInbound={true}
+          inboundCallId={incomingCall.callId}
+          inboundSdp={incomingCall.sdp}
+        />
+      )}
     </div>
   );
 }

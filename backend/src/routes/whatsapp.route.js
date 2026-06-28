@@ -1550,4 +1550,306 @@ router.get(
   },
 );
 
+/**
+ * =====================================
+ * INITIATE WHATSAPP AUDIO CALL (WEBRTC)
+ * =====================================
+ * Access: STAFF, GYM_OWNER, SUPERADMIN
+ */
+router.post(
+  "/call/initiate",
+  authenticateToken,
+  requireRoles(["STAFF", "GYM_OWNER", "SUPERADMIN"]),
+  async (req, res) => {
+    const { gymSlug } = req.params;
+    const { to, sdp } = req.body;
+
+    if (!to || !sdp) {
+      return res.status(400).json({ error: "Missing 'to' or 'sdp' in request body" });
+    }
+
+    try {
+      const gym = await prisma.gym.findUnique({
+        where: { slug: gymSlug.toLowerCase() },
+      });
+
+      if (!gym || !gym.whatsapp_connected || !gym.whatsapp_access_token || !gym.whatsapp_phone_number_id) {
+        return res.status(400).json({ error: "Gym WhatsApp not connected" });
+      }
+
+      const token = decrypt(gym.whatsapp_access_token);
+      
+      const payload = {
+        messaging_product: "whatsapp",
+        to,
+        action: "connect",
+        session: {
+          sdp_type: "offer",
+          sdp
+        },
+        biz_opaque_callback_data: gym.id // Send gym ID to route webhooks back
+      };
+
+      const resp = await fetch(
+        `${GRAPH_BASE_URL}/${META_API_VERSION}/${gym.whatsapp_phone_number_id}/calls`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        console.error("❌ [Call Initiate] Meta Error:", data);
+        return res.status(400).json({ error: "Failed to initiate call", details: data });
+      }
+
+      const callId = data.calls?.[0]?.id;
+      
+      res.json({
+        success: true,
+        callId
+      });
+    } catch (err) {
+      console.error("❌ [Call Initiate] Error:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * =====================================
+ * TERMINATE WHATSAPP AUDIO CALL (WEBRTC)
+ * =====================================
+ * Access: STAFF, GYM_OWNER, SUPERADMIN
+ */
+router.post(
+  "/call/terminate",
+  authenticateToken,
+  requireRoles(["STAFF", "GYM_OWNER", "SUPERADMIN"]),
+  async (req, res) => {
+    const { gymSlug } = req.params;
+    const { callId } = req.body;
+
+    if (!callId) {
+      return res.status(400).json({ error: "Missing 'callId' in request body" });
+    }
+
+    try {
+      const gym = await prisma.gym.findUnique({
+        where: { slug: gymSlug.toLowerCase() },
+      });
+
+      if (!gym || !gym.whatsapp_connected || !gym.whatsapp_access_token || !gym.whatsapp_phone_number_id) {
+        return res.status(400).json({ error: "Gym WhatsApp not connected" });
+      }
+
+      const token = decrypt(gym.whatsapp_access_token);
+      
+      const payload = {
+        messaging_product: "whatsapp",
+        call_id: callId,
+        action: "terminate"
+      };
+
+      const resp = await fetch(
+        `${GRAPH_BASE_URL}/${META_API_VERSION}/${gym.whatsapp_phone_number_id}/calls`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        console.error("❌ [Call Terminate] Meta Error:", data);
+        return res.status(400).json({ error: "Failed to terminate call", details: data });
+      }
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("❌ [Call Terminate] Error:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * =====================================
+ * ACCEPT INBOUND WHATSAPP AUDIO CALL (WEBRTC)
+ * =====================================
+ * Access: STAFF, GYM_OWNER, SUPERADMIN
+ */
+router.post(
+  "/call/accept",
+  authenticateToken,
+  requireRoles(["STAFF", "GYM_OWNER", "SUPERADMIN"]),
+  async (req, res) => {
+    const { gymSlug } = req.params;
+    const { callId, sdp } = req.body;
+
+    if (!callId || !sdp) {
+      return res.status(400).json({ error: "Missing 'callId' or 'sdp' in request body" });
+    }
+
+    try {
+      const gym = await prisma.gym.findUnique({
+        where: { slug: gymSlug.toLowerCase() },
+      });
+
+      if (!gym || !gym.whatsapp_connected || !gym.whatsapp_access_token || !gym.whatsapp_phone_number_id) {
+        return res.status(400).json({ error: "Gym WhatsApp not connected" });
+      }
+
+      const token = decrypt(gym.whatsapp_access_token);
+      
+      const payload = {
+        messaging_product: "whatsapp",
+        call_id: callId,
+        action: "accept",
+        session: {
+          sdp_type: "answer",
+          sdp
+        }
+      };
+
+      const resp = await fetch(
+        `${GRAPH_BASE_URL}/${META_API_VERSION}/${gym.whatsapp_phone_number_id}/calls`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        console.error("❌ [Call Accept] Meta Error:", data);
+        return res.status(400).json({ error: "Failed to accept call", details: data });
+      }
+
+      res.json({ success: true });
+    } catch (err) {
+      console.error("❌ [Call Accept] Error:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * =====================================
+ * REQUEST WHATSAPP AUDIO CALL PERMISSION
+ * =====================================
+ * Access: STAFF, GYM_OWNER, SUPERADMIN
+ */
+router.post(
+  "/call/request-permission",
+  authenticateToken,
+  requireRoles(["STAFF", "GYM_OWNER", "SUPERADMIN"]),
+  async (req, res) => {
+    const { gymSlug } = req.params;
+    const { memberId } = req.body;
+
+    if (!memberId) {
+      return res.status(400).json({ error: "Missing 'memberId' in request body" });
+    }
+
+    try {
+      const gym = await prisma.gym.findUnique({
+        where: { slug: gymSlug.toLowerCase() },
+      });
+
+      if (!gym || !gym.whatsapp_connected || !gym.whatsapp_access_token || !gym.whatsapp_phone_number_id) {
+        return res.status(400).json({ error: "Gym WhatsApp not connected" });
+      }
+
+      const member = await prisma.member.findUnique({
+        where: { id: memberId },
+      });
+
+      if (!member || member.gymId !== gym.id) {
+        return res.status(404).json({ error: "Member not found" });
+      }
+
+      const token = decrypt(gym.whatsapp_access_token);
+      
+      const payload = {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: member.phone,
+        type: "interactive",
+        interactive: {
+          type: "call_permission_request",
+          action: {
+            name: "call_permission_request"
+          }
+        }
+      };
+
+      const resp = await fetch(
+        `${GRAPH_BASE_URL}/${META_API_VERSION}/${gym.whatsapp_phone_number_id}/messages`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        console.error("❌ [Call Request Permission] Meta Error:", data);
+        return res.status(400).json({ error: "Failed to request call permission", details: data });
+      }
+
+      // Update Database Cache
+      const updatedMember = await prisma.member.update({
+        where: { id: memberId },
+        data: {
+          callPermissionStatus: "PENDING",
+          callPermissionRequestedAt: new Date(),
+          callPermissionUpdatedAt: new Date(),
+          callPermissionRequestCount: { increment: 1 }
+        }
+      });
+
+      // Broadcast to socket clients
+      import("../socket.js").then(({ getIO }) => {
+        try {
+          const io = getIO();
+          io.to(`gym:${gym.id}`).emit("member:updated", {
+            memberId: updatedMember.id,
+            callPermissionStatus: updatedMember.callPermissionStatus,
+            callPermissionUpdatedAt: updatedMember.callPermissionUpdatedAt
+          });
+        } catch (e) {
+          console.error("Failed to emit member:updated", e);
+        }
+      });
+
+      res.json({ success: true, messageId: data.messages?.[0]?.id });
+    } catch (err) {
+      console.error("❌ [Call Request Permission] Error:", err);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
+
 export default router;

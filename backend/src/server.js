@@ -17,6 +17,8 @@ import { authenticateToken, scopeToGym } from "./middleware/auth.js";
 import "./lib/queue.js";
 
 
+import mediaRouter from "./routes/media.route.js";
+
 const app = express();
 app.set("trust proxy", 1);
 
@@ -59,6 +61,7 @@ app.use("/api/dashboard/:gymSlug/whatsapp", authenticateToken, scopeToGym, whats
 app.use("/api/dashboard/:gymSlug/inbox", authenticateToken, scopeToGym, inboxRouter);
 app.use("/api/dashboard/:gymSlug/members", authenticateToken, scopeToGym, membersRouter);
 app.use("/api/dashboard/:gymSlug/plans", authenticateToken, scopeToGym, plansRouter);
+app.use("/api/media/:gymSlug", authenticateToken, scopeToGym, mediaRouter);
 app.use("/uploads", express.static("uploads"));
 app.use("/webhook", whatsappWebhookRouter);
 

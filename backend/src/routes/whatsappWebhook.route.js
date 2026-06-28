@@ -229,10 +229,17 @@ router.post("/", async (req, res) => {
           text = msg.text?.body || "";
         } else if (msg.type === "interactive") {
           const interactive = msg.interactive;
-          text =
-            interactive?.button_reply?.title ||
-            interactive?.list_reply?.title ||
-            "[interactive]";
+          if (interactive?.type === "call_permission_reply") {
+            const reply = interactive.call_permission_reply;
+            text = reply.response === "accept" 
+              ? "✅ Call permission granted by customer" 
+              : "❌ Call permission denied by customer";
+          } else {
+            text =
+              interactive?.button_reply?.title ||
+              interactive?.list_reply?.title ||
+              "[interactive]";
+          }
         } else if (msg.type === "button") {
           text = msg.button?.text || "";
         } else {
@@ -312,11 +319,35 @@ router.post("/", async (req, res) => {
               updateData.memberName = profileName;
             }
 
+            // Update Call Permission Status
+            let shouldEmitMemberUpdate = false;
+            if (msg.type === "interactive" && msg.interactive?.type === "call_permission_reply") {
+              const reply = msg.interactive.call_permission_reply;
+              if (reply.response === "accept") {
+                updateData.callPermissionStatus = "GRANTED";
+                updateData.callPermissionGrantedAt = new Date();
+              } else if (reply.response === "deny") {
+                updateData.callPermissionStatus = "DENIED";
+                updateData.callPermissionRevokedAt = new Date(); // Using revoked/denied field
+              }
+              updateData.callPermissionUpdatedAt = new Date();
+              shouldEmitMemberUpdate = true;
+            }
+
             if (Object.keys(updateData).length > 0) {
               member = await prisma.member.update({
                 where: { id: member.id },
                 data: updateData,
               });
+              
+              if (shouldEmitMemberUpdate) {
+                try {
+                  const io = (await import("../socket.js")).getIO();
+                  io.to(`gym:${gym.id}`).emit("member:updated", member);
+                } catch (e) {
+                  console.error("Failed to emit member:updated", e);
+                }
+              }
             }
           }
 
@@ -477,6 +508,105 @@ router.post("/", async (req, res) => {
         }
       }
     }
+    /* =====================================================
+       3. WEBRTC CALLS (BUSINESS-INITIATED / TERMINATED)
+       ===================================================== */
+    if (value.calls?.length) {
+      console.log(`📞 Processing ${value.calls.length} call event(s)...`);
+      for (const callObj of value.calls) {
+        const callId = callObj.id;
+        const event = callObj.event || (callObj.session ? "connect" : "unknown");
+        
+        console.log(`📞 Call ID: ${callId} -> Event: "${event}"`);
+
+        // Find the corresponding member based on the phone number
+        // If from === gym's number, then it's an outbound call and the member is `to`.
+        // If to === gym's number, then it's an inbound call and the member is `from`.
+        const gymPhone = gym.whatsappDisplayPhoneNumber?.replace(/\D/g, '') || callObj.from; 
+        // Best effort: if 'from' is the gym's phone number (which we can check by matching metadata display_phone_number), then member is 'to'
+        let memberPhone = callObj.from;
+        
+        // Use the metadata display_phone_number from the webhook if available to identify the gym's number
+        const metadataDisplayPhone = value.metadata?.display_phone_number?.replace(/\D/g, '');
+        if (metadataDisplayPhone && callObj.from === metadataDisplayPhone) {
+            memberPhone = callObj.to;
+        } else if (callObj.direction === "BUSINESS_INITIATED") {
+            memberPhone = callObj.to;
+        }
+
+        let conversationId = null;
+        let memberName = memberPhone;
+        
+        if (memberPhone && gym) {
+          const member = await prisma.member.findFirst({
+            where: { gymId: gym.id, phone: memberPhone },
+          });
+          if (member) {
+            conversationId = member.id;
+            memberName = member.memberName || member.name || memberPhone;
+          }
+        }
+
+        if (conversationId) {
+          try {
+            const io = getIO();
+            const payload = {
+              callId,
+              event,
+              status: callObj.status?.[0] || null,
+              sdp: callObj.session?.sdp || null,
+              direction: callObj.direction || "BUSINESS_INITIATED",
+              conversationId,
+              memberName,
+              memberPhone,
+            };
+            io.to(`conversation:${conversationId}`).emit("whatsapp_call_event", payload);
+            io.to(`gym:${gym.id}`).emit("whatsapp_call_event", payload);
+            console.log(`🔌 Emitted whatsapp_call_event to conversation:${conversationId} and gym:${gym.id}`);
+          } catch (wsErr) {
+            console.error("❌ Failed to emit whatsapp_call_event:", wsErr.message);
+          }
+        }
+      }
+    }
+
+    // Call status webhooks arrive via `value.statuses` as well, with type='call'
+    // Let's modify the statuses loop above to also handle call statuses!
+    // But since I am inserting this block, I will let the above statuses block handle regular messages.
+    // Wait, let's just parse call statuses here if present.
+    if (value.statuses?.length) {
+      for (const statusObj of value.statuses) {
+        if (statusObj.type === "call") {
+          const callId = statusObj.id;
+          const metaState = statusObj.status; // RINGING | ACCEPTED | REJECTED
+          
+          console.log(`📞 Call Status ID: ${callId} -> State: "${metaState}"`);
+
+          const recipientId = statusObj.recipient_id;
+          let conversationId = null;
+          if (recipientId && gym) {
+            const member = await prisma.member.findFirst({
+              where: { gymId: gym.id, phone: recipientId },
+            });
+            if (member) conversationId = member.id;
+          }
+
+          if (conversationId) {
+            try {
+              const io = getIO();
+              io.to(`conversation:${conversationId}`).emit("whatsapp_call_event", {
+                callId,
+                event: "status",
+                status: metaState
+              });
+            } catch (wsErr) {
+              console.error("❌ Failed to emit call status:", wsErr.message);
+            }
+          }
+        }
+      }
+    }
+
   } catch (err) {
     console.error("❌ Error processing WhatsApp webhook payload:", err);
   }

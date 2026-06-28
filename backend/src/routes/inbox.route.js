@@ -145,7 +145,8 @@ router.get("/", async (req, res) => {
           unreadCount,
           sessionStarted,
           sessionActive,
-          sessionExpiresAt
+          sessionExpiresAt,
+          callPermissionStatus: member.callPermissionStatus
         };
       })
     );
@@ -254,7 +255,8 @@ router.get("/:memberId", async (req, res) => {
         notes: member.notes,
         blockedAt: member.blockedAt,
         isMember: !!activeMembership,
-        planName: activeMembership ? activeMembership.plan.name : null
+        planName: activeMembership ? activeMembership.plan.name : null,
+        callPermissionStatus: member.callPermissionStatus
       },
       sessionStarted,
       sessionActive,

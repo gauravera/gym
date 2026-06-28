@@ -86,6 +86,8 @@ model Gym {
   lastNameApprovedAt         DateTime?
   lastRegistrationAttemptAt  DateTime?
   registrationError          String?
+  displayNameRetryCount      Int               @default(0)
+  displayNameLockedUntil     DateTime?
 
   users            GymUser[]
   members          Member[]
@@ -123,6 +125,9 @@ model WhatsAppDisplayNameHistory {
   approvedAt          DateTime?
   registeredAt        DateTime?
   rejectionReason     String?
+  
+  processedByWorker   Boolean                   @default(false)
+  workerAttempts      Int                       @default(0)
 
   gym                 Gym                       @relation(fields: [gymId], references: [id], onDelete: Cascade)
 }
@@ -140,6 +145,14 @@ model GymUser {
   auditLogs    AuditLog[]
 }
 
+enum CallPermissionStatus {
+  UNKNOWN
+  PENDING
+  GRANTED
+  DENIED
+  REVOKED
+}
+
 model Member {
   id               String            @id @default(uuid())
   memberName       String
@@ -152,6 +165,16 @@ model Member {
   notes            String?
   isBotDisabled    Boolean           @default(false) // For Human Takeover
   blockedAt        DateTime?
+  
+  // Call Permission Tracking
+  callPermissionStatus      CallPermissionStatus @default(UNKNOWN)
+  callPermissionUpdatedAt   DateTime?
+  callPermissionVerifiedAt  DateTime?
+  callPermissionRequestedAt DateTime?
+  callPermissionGrantedAt   DateTime?
+  callPermissionRevokedAt   DateTime?
+  callPermissionRequestCount Int                 @default(0)
+
   gymId            String
   gym              Gym               @relation(fields: [gymId], references: [id], onDelete: Cascade)
   createdAt        DateTime          @default(now())

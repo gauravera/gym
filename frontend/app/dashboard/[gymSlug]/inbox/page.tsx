@@ -26,6 +26,7 @@ import ActionMenu from "@/components/inbox/actionMenu";
 import AttachMenu from "@/components/inbox/attachMenu";
 import MediaModal from "@/components/inbox/media/modal";
 import ImagePreview from "@/components/inbox/imagePreview";
+import CallModal from "@/components/inbox/callModal";
 import { useChatSocket } from "@/hooks/useChatSocket";
 import { useReadReceipts } from "@/hooks/useReadReceipts";
 import { useInboxSocket } from "@/hooks/useInboxSocket";
@@ -72,6 +73,9 @@ const mapApiConversation = (c: any): Conversation => {
     isBlocked: !!c.isBlocked,
     isMember: c.isMember ?? false,
     planName: c.planName ?? null,
+    callPermissionStatus: c.callPermissionStatus || "UNKNOWN",
+    callPermissionUpdatedAt: c.callPermissionUpdatedAt || null,
+    callPermissionVerifiedAt: c.callPermissionVerifiedAt || null,
   };
 };
 
@@ -453,6 +457,8 @@ function ChatArea({
     }
   };
 
+  const [isCallModalOpen, setIsCallModalOpen] = useState(false);
+
   return (
     <div className="flex-1 flex flex-col relative h-full overflow-hidden">
       <ChatHeader
@@ -460,11 +466,39 @@ function ChatArea({
         onBack={onBack}
         onToggleBlock={() => onToggleBlock?.(conversation.id, !!conversation.isBlocked)}
         onAddAsMember={() => setIsAddMemberOpen(true)}
+        onCallClick={() => setIsCallModalOpen(true)}
+        onRequestCallPermission={async () => {
+          try {
+            const res = await fetch(`/api/dashboard/${gymSlug}/whatsapp/call/request-permission`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ memberId: conversation.id }),
+            });
+            if (!res.ok) {
+              const data = await res.json();
+              throw new Error(data.error || "Failed to request call permission");
+            }
+            toast.success("Call permission requested!");
+          } catch (err: any) {
+            console.error("Call permission request error:", err);
+            toast.error(err.message || "Failed to request call permission");
+          }
+        }}
       />
 
       <SessionBanner
         isSessionActive={isSessionActive}
         remainingTime={remainingTime}
+      />
+
+      {/* CALL MODAL */}
+      <CallModal
+        isOpen={isCallModalOpen}
+        onClose={() => setIsCallModalOpen(false)}
+        conversationId={conversation.id}
+        recipientName={conversation.memberName}
+        recipientPhone={conversation.phone}
+        gymSlug={gymSlug}
       />
 
       {/* MESSAGES WRAPPER */}
@@ -774,6 +808,7 @@ export default function InboxPage() {
                 isBlocked: !!res.data.member?.blockedAt,
                 isMember: res.data.member?.isMember ?? false,
                 planName: res.data.member?.planName ?? null,
+                callPermissionStatus: res.data.member?.callPermissionStatus ?? c.callPermissionStatus,
               }
             : c,
         ),
