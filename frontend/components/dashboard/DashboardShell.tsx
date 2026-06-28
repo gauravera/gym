@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import ThemeToggle from '@/components/dashboard/ThemeToggle';
 import {
   Dumbbell,
@@ -28,6 +29,7 @@ interface DashboardShellProps {
 
 export default function DashboardShell({ children, gym, activeUser, gymSlug }: DashboardShellProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname();
 
   const sidebarLinks = [
     { label: 'Members', icon: <Users className="h-4 w-4 shrink-0" />, href: `/dashboard/${gymSlug}/members` },
@@ -52,12 +54,12 @@ export default function DashboardShell({ children, gym, activeUser, gymSlug }: D
         }`}
       >
         {/* Brand Header */}
-        <div className={`flex h-16 items-center border-b border-zinc-900 ${isCollapsed ? 'justify-center' : 'justify-between px-4'}`}>
+        <div className={`flex h-16 items-center border-b border-zinc-900 transition-all duration-300 ${isCollapsed ? 'justify-center' : 'justify-between px-4'}`}>
           {!isCollapsed ? (
             <>
-              <div className="flex items-center gap-2 overflow-hidden">
+              <div className="flex items-center overflow-hidden">
                 <Dumbbell className="h-6 w-6 text-cyan-400 shrink-0" />
-                <span className="text-lg font-black tracking-tight text-white uppercase whitespace-nowrap">
+                <span className={`text-lg font-black tracking-tight text-white uppercase whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? 'max-w-0 opacity-0 ml-0' : 'max-w-[120px] opacity-100 ml-2'}`}>
                   Fit<span className="text-cyan-400">Flow</span>
                 </span>
               </div>
@@ -80,56 +82,59 @@ export default function DashboardShell({ children, gym, activeUser, gymSlug }: D
           )}
         </div>
 
-        {/* Gym Tenant Switcher */}
-        <div className={`px-4 py-3 border-b border-zinc-900/60 bg-zinc-900/10 ${isCollapsed ? 'hidden' : 'block'}`}>
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3">
-            <span className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Active Tenant</span>
-            <span className="block text-sm font-bold text-white mt-0.5 truncate">{gym.name}</span>
-          </div>
-        </div>
 
         {/* Navigation Items */}
         <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto overflow-x-hidden">
-          {sidebarLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              title={isCollapsed ? link.label : undefined}
-              className={`flex items-center rounded-xl px-4 py-3 text-xs font-semibold text-zinc-400 hover:bg-zinc-900/60 hover:text-white transition-all duration-200 ${
-                isCollapsed ? 'justify-center px-0' : 'gap-3'
-              }`}
-            >
-              {link.icon}
-              {!isCollapsed && <span className="whitespace-nowrap">{link.label}</span>}
-            </Link>
-          ))}
+          {sidebarLinks.map((link) => {
+            const isActive = pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                title={isCollapsed ? link.label : undefined}
+                className={`flex items-center rounded-xl py-3 text-xs font-semibold transition-all duration-300 ${
+                  isCollapsed ? 'justify-center px-0' : 'px-4'
+                } ${
+                  isActive 
+                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.1)]' 
+                    : 'text-zinc-400 hover:bg-zinc-900/60 hover:text-white border border-transparent'
+                }`}
+              >
+                {link.icon}
+                <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? 'max-w-0 opacity-0 ml-0' : 'max-w-[150px] opacity-100 ml-3'}`}>
+                  {link.label}
+                </span>
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Bottom Profile Details */}
-        <div className={`border-t border-zinc-900 p-4 bg-zinc-950/40 ${isCollapsed ? 'flex flex-col items-center gap-4 px-2' : ''}`}>
-          <div className={`flex items-center gap-3 ${isCollapsed ? 'mb-0' : 'mb-4'}`}>
+        <div className={`border-t border-zinc-900 transition-all duration-300 bg-zinc-950/40 ${isCollapsed ? 'flex flex-col items-center gap-4 p-2 py-4' : 'p-4'}`}>
+          <div className={`flex items-center transition-all duration-300 ${isCollapsed ? 'mb-0 justify-center' : 'mb-4'}`}>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-950 border border-cyan-800 text-cyan-400 font-extrabold text-xs shrink-0" title={activeUser.name}>
               {activeUser.name.substring(0, 2).toUpperCase()}
             </div>
-            {!isCollapsed && (
-              <div className="overflow-hidden">
-                <span className="block text-xs font-bold text-white truncate">{activeUser.name}</span>
-                <span className="flex items-center gap-1 text-[9px] font-semibold text-zinc-500 mt-0.5 uppercase tracking-wider">
-                  <UserCheck className="h-2.5 w-2.5 text-cyan-400" /> {activeUser.role}
-                </span>
-              </div>
-            )}
+            <div className={`overflow-hidden transition-all duration-300 flex-1 ${isCollapsed ? 'max-w-0 opacity-0 ml-0' : 'max-w-[150px] opacity-100 ml-3'}`}>
+              <span className="block text-xs font-bold text-white truncate">{activeUser.name}</span>
+              <span className="flex items-center gap-1 text-[9px] font-semibold text-zinc-500 mt-0.5 uppercase tracking-wider">
+                <UserCheck className="h-2.5 w-2.5 text-cyan-400 shrink-0" /> {activeUser.role}
+              </span>
+            </div>
           </div>
 
-          <form action="/api/auth/logout" method="POST" className={isCollapsed ? 'w-full' : ''}>
+          <form action="/api/auth/logout" method="POST" className={isCollapsed ? 'w-full flex justify-center' : 'w-full'}>
             <button
               type="submit"
               title={isCollapsed ? "Sign Out" : undefined}
-              className={`flex items-center justify-center rounded-xl border border-zinc-900 bg-zinc-900/30 text-xs font-bold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all ${
-                isCollapsed ? 'w-10 h-10 mx-auto' : 'w-full gap-2 px-4 py-2'
+              className={`flex items-center justify-center rounded-xl border border-zinc-900 bg-zinc-900/30 text-xs font-bold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-all duration-300 ${
+                isCollapsed ? 'w-10 h-10' : 'w-full px-4 py-2'
               }`}
             >
-              <LogOut className="h-3.5 w-3.5 shrink-0" /> {!isCollapsed && "Sign Out"}
+              <LogOut className="h-3.5 w-3.5 shrink-0" /> 
+              <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? 'max-w-0 opacity-0 ml-0' : 'max-w-[100px] opacity-100 ml-2'}`}>
+                Sign Out
+              </span>
             </button>
           </form>
         </div>
