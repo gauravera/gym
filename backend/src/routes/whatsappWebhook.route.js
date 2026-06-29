@@ -563,8 +563,51 @@ router.post("/", async (req, res) => {
             io.to(`conversation:${conversationId}`).emit("whatsapp_call_event", payload);
             io.to(`gym:${gym.id}`).emit("whatsapp_call_event", payload);
             console.log(`🔌 Emitted whatsapp_call_event to conversation:${conversationId} and gym:${gym.id}`);
+            
+            // Save Call Log if it's a terminate event
+            if (event === "terminate") {
+              const existingCallLog = await prisma.whatsAppMessage.findUnique({
+                where: { messageId: callId }
+              });
+
+              if (!existingCallLog) {
+                const isOutbound = callObj.direction === "BUSINESS_INITIATED";
+                const callText = JSON.stringify({
+                  _type: "call_log",
+                  duration: callObj.duration || 0,
+                  callStatus: callObj.status || "UNKNOWN"
+                });
+
+                const newLog = await prisma.whatsAppMessage.create({
+                  data: {
+                    gymId: gym.id,
+                    messageId: callId,
+                    senderPhone: isOutbound ? gymPhone : memberPhone,
+                    recipientPhone: isOutbound ? memberPhone : gymPhone,
+                    text: callText,
+                    direction: isOutbound ? "OUTBOUND" : "INBOUND",
+                    status: "DELIVERED",
+                    createdAt: new Date(Number(callObj.timestamp || Math.floor(Date.now() / 1000)) * 1000),
+                  }
+                });
+
+                // Map to frontend message format
+                const mappedMsg = {
+                  id: newLog.id,
+                  whatsappMessageId: newLog.messageId,
+                  text: newLog.text,
+                  sender: newLog.direction === "OUTBOUND" ? "executive" : "customer",
+                  timestamp: newLog.createdAt.toISOString(),
+                  status: newLog.status.toLowerCase(),
+                };
+
+                // Emit to chat UI
+                io.to(`conversation:${conversationId}`).emit("message:new", mappedMsg);
+                io.to(`gym:${gym.id}`).emit("inbox:update");
+              }
+            }
           } catch (wsErr) {
-            console.error("❌ Failed to emit whatsapp_call_event:", wsErr.message);
+            console.error("❌ Failed to emit whatsapp_call_event or save log:", wsErr.message);
           }
         }
       }

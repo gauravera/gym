@@ -502,6 +502,108 @@ export default function MessageBubble({
     </div>
   );
 
+  let callLogData = null;
+  let isCallPermissionRequest = false;
+
+  try {
+    if (msg.text && msg.text.includes('"_type":"call_log"')) {
+      callLogData = JSON.parse(msg.text);
+    }
+  } catch (e) {}
+
+  if (
+    msg.outboundPayload?.interactive?.type === "call_permission_request" ||
+    (msg.text && msg.text.includes("call_permission_request"))
+  ) {
+    isCallPermissionRequest = true;
+  }
+
+  // --- SPECIAL RENDERERS ---
+  if (callLogData) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        className={`flex items-end gap-2 ${
+          msg.sender === "executive" ? "justify-end" : "justify-start"
+        }`}
+      >
+        <div className={`group relative shadow-sm overflow-hidden flex flex-col p-2 min-w-[200px] max-w-[70%] ${
+            msg.sender === "executive"
+              ? "bg-bubble-outbound-bg text-bubble-outbound-text rounded-tr-none rounded-2xl rounded-br-2xl"
+              : "bg-bubble-inbound-bg text-bubble-inbound-text rounded-tl-none rounded-2xl rounded-bl-2xl border border-zinc-200/50 dark:border-zinc-800/50"
+          }`}>
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-zinc-800/50 dark:bg-zinc-800 rounded-full flex items-center justify-center">
+              <Phone className="w-5 h-5 text-zinc-300" />
+            </div>
+            <div className="flex-1 min-w-0 pb-1">
+              <div className="font-semibold text-zinc-100 text-[15px]">Voice call</div>
+              <div className="text-zinc-400 text-[13px]">{callLogData.duration > 0 ? `${callLogData.duration} secs` : "Missed"}</div>
+            </div>
+          </div>
+          <div className="absolute bottom-1.5 right-2 flex items-center gap-1">
+            {renderTimestamp()}
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (isCallPermissionRequest) {
+    const isExpired = conversation.callPermissionStatus !== "PENDING";
+    const statusText = conversation.callPermissionStatus === "GRANTED" 
+      ? "Permission granted" 
+      : conversation.callPermissionStatus === "DENIED" 
+        ? "Permission denied" 
+        : "Request expired";
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        className={`flex items-end gap-2 ${
+          msg.sender === "executive" ? "justify-end" : "justify-start"
+        }`}
+      >
+        <div className={`group relative shadow-sm overflow-hidden flex flex-col max-w-[80%] w-[320px] ${
+            msg.sender === "executive"
+              ? "bg-[#1f2c34] text-zinc-100 rounded-tr-none rounded-2xl rounded-br-2xl border border-zinc-800/60"
+              : "bg-bubble-inbound-bg text-bubble-inbound-text rounded-tl-none rounded-2xl rounded-bl-2xl border border-zinc-200/50 dark:border-zinc-800/50"
+          }`}>
+          <div className="p-3.5 pb-2">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 p-2 bg-[#313c43] rounded-full flex items-center justify-center shrink-0">
+                <Phone className="w-4 h-4 text-zinc-200 fill-zinc-200" />
+              </div>
+              <div className="flex-1 min-w-0 pr-8">
+                <div className="font-semibold text-[15px] leading-tight mb-1 text-zinc-100">
+                  Can {conversation.memberName || "Test Number"} call you?
+                </div>
+                <div className="text-[14px] text-zinc-400 leading-snug">
+                  You can update your preference anytime in the business profile
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="absolute top-2 right-2 flex items-center gap-1">
+            <span className="text-[11px] text-zinc-400/80">{msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}</span>
+          </div>
+          <div className="border-t border-[#2a373f] mt-2 w-full text-center py-2.5">
+            {isExpired ? (
+              <span className="text-[#8696a0] font-medium text-[15px] tracking-wide">{statusText}</span>
+            ) : (
+              <span className="text-[#00a884] font-medium text-[15px] tracking-wide flex items-center justify-center gap-1">
+                Allow until {new Date(new Date().getTime() + 24*60*60*1000).toLocaleDateString("en-GB", { day: 'numeric', month: 'short' })}
+                <svg viewBox="0 0 10 10" width="12" height="12" fill="currentColor" className="mt-0.5"><path d="M2.5 3.5l2.5 2.5 2.5-2.5.7.7-3.2 3.2-3.2-3.2z"/></svg>
+              </span>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
